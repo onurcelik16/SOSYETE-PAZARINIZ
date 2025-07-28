@@ -23,7 +23,7 @@ Modern ve kullanıcı dostu e-ticaret platformu. React.js frontend ve Node.js ba
 - **Ürün Yönetimi:** Ürün ekleme, düzenleme, silme
 - **Sipariş Yönetimi:** Sipariş durumu güncelleme
 - **Kullanıcı Yönetimi:** Kullanıcı listesi ve detayları
-- **Dashboard:** Satış istatistikleri ve grafikler
+  
 
 ## 🚀 Kurulum
 
