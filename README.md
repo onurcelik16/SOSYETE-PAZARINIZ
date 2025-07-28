@@ -144,9 +144,9 @@ SOSYETE-PAZARINIZ/
 
 ## 📧 İletişim
 
-- **Email:** [your-email@example.com]
+- **Email:** [celikonur10@example.com]
 - **GitHub:** [https://github.com/onurcelik16]
-- **LinkedIn:** [your-linkedin-profile]
+- **LinkedIn:** [https://www.linkedin.com/in/onur-%C3%A7elik-772832303/]
 
 ## 📄 Lisans
 
@@ -162,11 +162,5 @@ Bu proje MIT lisansı altında lisanslanmıştır.
 
 ## 🙏 Teşekkürler
 
-- React.js ekibine
-- Node.js topluluğuna
-- MongoDB Atlas'a
-- Tüm açık kaynak projelere
-
----
 
 **SOSYETE PAZARINIZ** - Modern alışverişin yeni adresi! 🛍️✨ 
