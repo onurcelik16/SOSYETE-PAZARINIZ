@@ -1,0 +1,650 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  width: 100vw;
+  max-width: 100vw;
+}
+
+body {
+  width: 100vw;
+  min-height: 100vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Banner görseli sadece JS tarafında inline style ile kullanılacak. Burada background veya background-image ile banner.png kullanılmıyor. */
+
+.homepage-banner-bg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  min-width: 100vw;
+  height: 400px;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+
+.homepage-banner-svg {
+  width: 100vw;
+  min-width: 100vw;
+  height: 220px;
+  display: block;
+}
+
+.homepage-container {
+  position: relative;
+  min-height: 100vh;
+  height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 12px;
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
+
+.homepage-card {
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 6px 32px rgba(25, 118, 210, 0.10);
+  padding: 14px 12px 10px 12px;
+  max-width: 400px;
+  min-width: 220px;
+  height: 340px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  margin: 32px auto 0 auto;
+}
+
+.homepage-logo-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 32px;
+  z-index: 2;
+  position: relative;
+}
+.hero-logo-outside {
+  width: 250px;
+  height: 250px;
+  object-fit: contain;
+  border-radius: 50%;
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+  background: #fff;
+  padding: 18px;
+  z-index: 2;
+  position: relative;
+  transition: box-shadow 0.2s, transform 0.2s;
+  display: block;
+}
+.hero-logo-outside:hover {
+  box-shadow: 0 12px 40px rgba(25, 118, 210, 0.28), 0 4px 16px rgba(0,0,0,0.12);
+  transform: scale(1.04);
+}
+
+.homepage-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.homepage-desc {
+  font-size: 0.95rem;
+  color: #444;
+  margin-bottom: 12px;
+  text-align: center;
+  max-width: 260px;
+}
+
+.advantages-list-better {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  width: 100%;
+  justify-content: center;
+}
+.advantage-card-better {
+  background: #f7faff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+  padding: 6px 6px 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+  max-width: 90px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #1976d2;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.advantage-card-better:hover {
+  box-shadow: 0 6px 24px rgba(25, 118, 210, 0.13);
+  transform: translateY(-4px) scale(1.03);
+}
+.adv-icon {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.login-btn-better {
+  background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
+  color: #fff;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+  transition: background 0.2s, transform 0.2s;
+  margin-top: 6px;
+  display: block;
+  text-align: center;
+}
+.login-btn-better:hover {
+  background: linear-gradient(90deg, #125ea2 0%, #1976d2 100%);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.homepage-main-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  margin-top: -60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.homepage-logo-overlap {
+  position: absolute;
+  top: -70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-logo-overlap {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  border-radius: 50%;
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+  background: #fff;
+  padding: 16px;
+  display: block;
+}
+
+.homepage-card-overlap {
+  margin-top: 60px;
+  padding-top: 70px;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(25, 118, 210, 0.10);
+}
+
+.sw-homepage-root {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e3f0ff 0%, #f5faff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.sw-banner-grey {
+  width: 100vw;
+  min-height: 220px;
+  background: linear-gradient(90deg, #f3f4f8 0%, #e0e2e7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 16px rgba(25, 118, 210, 0.04);
+}
+.sw-banner-content {
+  text-align: center;
+  color: #222;
+  max-width: 600px;
+  margin: 48px 0 32px 0;
+}
+.sw-title {
+  font-size: 2.6rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+  letter-spacing: 0.5px;
+}
+.sw-desc {
+  font-size: 1.25rem;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+.sw-banner-img-wrapper {
+  position: relative;
+  width: 100vw;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+}
+.sw-banner-img {
+  width: 100vw;
+  min-height: 320px;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.98) contrast(1.01);
+}
+.sw-advantages-on-banner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.sw-advantages-row {
+  display: flex;
+  gap: 32px;
+  margin-top: 0;
+  margin-bottom: 18px;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+  z-index: 2;
+  pointer-events: auto;
+}
+.sw-adv-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(25, 118, 210, 0.10);
+  padding: 32px 28px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 180px;
+  max-width: 220px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1976d2;
+  transition: box-shadow 0.2s, transform 0.2s;
+  pointer-events: auto;
+}
+.sw-adv-card:hover {
+  box-shadow: 0 8px 32px rgba(25, 118, 210, 0.18);
+  transform: translateY(-4px) scale(1.04);
+}
+.sw-adv-icon {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+}
+.sw-adv-title {
+  font-size: 1.1rem;
+  color: #1976d2;
+  font-weight: 700;
+}
+
+.sw-action-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0;
+  pointer-events: auto;
+}
+.sw-login-btn {
+  background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
+  color: #fff;
+  padding: 16px 48px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10);
+  transition: background 0.2s, transform 0.2s;
+}
+.sw-login-btn:hover {
+  background: linear-gradient(90deg, #125ea2 0%, #1976d2 100%);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.sw-banner-img-bg {
+  width: 100vw;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 0;
+  box-shadow: 0 -2px 16px rgba(25, 118, 210, 0.04);
+}
+
+.sw-homepage-root.dark-bg {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #232946 0%, #16161a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.sw-banner-grey.dark-banner {
+  width: 100vw;
+  min-height: 220px;
+  background: linear-gradient(90deg, #283e6d 0%, #1a2540 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 16px rgba(25, 118, 210, 0.04);
+}
+.sw-banner-content {
+  text-align: center;
+  color: #fff;
+  max-width: 600px;
+  margin: 48px 0 32px 0;
+}
+.sw-title {
+  font-size: 2.6rem;
+  font-weight: 900;
+  margin-bottom: 18px;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(25, 118, 210, 0.18);
+}
+.sw-desc {
+  font-size: 1.25rem;
+  font-weight: 400;
+  opacity: 0.95;
+  color: #e0e6f7;
+}
+
+.sw-action-row.sw-action-row-big {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin: 48px 0 0 0;
+}
+.sw-main-btn {
+  background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
+  color: #fff;
+  padding: 22px 48px;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 2px 16px rgba(25, 118, 210, 0.18);
+  transition: background 0.2s, transform 0.2s;
+  text-align: center;
+  min-width: 180px;
+}
+.sw-main-btn:hover {
+  background: linear-gradient(90deg, #125ea2 0%, #1976d2 100%);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.sw-homepage-root.banner-bg {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
+.dark-bg-auth {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #232946 0%, #16161a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.auth-root {
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.sw-homepage-root.banner-bg,
+.dark-bg-auth,
+.auth-root {
+  overflow-x: hidden;
+  width: 100vw;
+  max-width: 100vw;
+}
+
+.antrasit-bg {
+  background: rgba(35, 35, 35, 0.92);
+  border-radius: 18px;
+  margin-top: 48px;
+  padding: 32px 32px 18px 32px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  max-width: 600px;
+  width: 90vw;
+  text-align: center;
+}
+.antrasit-text {
+  color: #fff !important;
+}
+
+.sw-title {
+  font-size: 2.6rem;
+  font-weight: 900;
+  margin-bottom: 18px;
+  letter-spacing: 0.5px;
+}
+.sw-desc {
+  font-size: 1.25rem;
+  font-weight: 400;
+  opacity: 0.95;
+}
+
+.sw-action-row.sw-action-row-big {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin: 48px 0 0 0;
+}
+.sw-main-btn.antrasit-btn {
+  background: #232323;
+  color: #fff;
+  padding: 22px 48px;
+  border: none;
+  border-radius: 14px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  transition: background 0.2s, transform 0.2s;
+  text-align: center;
+  min-width: 180px;
+}
+.sw-main-btn.antrasit-btn:hover {
+  background: #444;
+  color: #fff;
+  transform: translateY(-2px) scale(1.04);
+}
+
+@media (max-width: 900px) {
+  .sw-advantages-row {
+    flex-direction: column;
+    gap: 18px;
+    align-items: center;
+  }
+  .sw-adv-card {
+    min-width: 160px;
+    max-width: 98vw;
+    padding: 18px 10px 14px 10px;
+    font-size: 1rem;
+  }
+  .sw-title {
+    font-size: 1.5rem;
+  }
+  .sw-banner-grey {
+    min-height: 120px;
+  }
+  .sw-banner-content {
+    margin: 24px 0 18px 0;
+  }
+  .sw-login-btn {
+    font-size: 1rem;
+    padding: 10px 24px;
+  }
+  .sw-banner-img-wrapper, .sw-banner-img {
+    min-height: 180px;
+    height: 180px;
+  }
+  .sw-banner-img-bg {
+    min-height: 180px;
+    height: 180px;
+  }
+  .sw-title {
+    font-size: 1.5rem;
+  }
+  .sw-banner-grey.dark-banner {
+    min-height: 120px;
+  }
+  .sw-banner-content {
+    margin: 24px 0 18px 0;
+  }
+  .sw-action-row.sw-action-row-big {
+    flex-direction: column;
+    gap: 18px;
+    margin: 32px 0 0 0;
+    align-items: center;
+  }
+  .sw-main-btn {
+    font-size: 1.05rem;
+    padding: 14px 18px;
+    min-width: 120px;
+  }
+  .antrasit-bg {
+    margin-top: 24px;
+    padding: 18px 8px 10px 8px;
+  }
+  .sw-main-btn.antrasit-btn {
+    font-size: 1.05rem;
+    padding: 14px 18px;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 700px) {
+  .homepage-card {
+    padding: 8px 2px 6px 2px;
+    border-radius: 14px;
+    max-width: 98vw;
+    min-width: unset;
+    height: 200px;
+    margin-top: 12px;
+  }
+  .homepage-container {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+  .advantages-list-better {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  .advantage-card-better {
+    min-width: 40px;
+    max-width: 60px;
+    padding: 3px 2px 2px 2px;
+    font-size: 0.7rem;
+  }
+  .hero-logo-outside {
+    width: 150px;
+    height: 150px;
+    padding: 8px;
+  }
+  .homepage-logo-area {
+    margin-bottom: 18px;
+  }
+  .hero-logo {
+    width: 80px;
+  }
+  .homepage-title {
+    font-size: 0.92rem;
+  }
+  .homepage-desc {
+    font-size: 0.82rem;
+    max-width: 160px;
+  }
+  .adv-icon {
+    font-size: 0.9rem;
+  }
+  .login-btn-better {
+    font-size: 0.82rem;
+    padding: 4px 10px;
+    margin-top: 4px;
+  }
+  .homepage-banner-bg, .homepage-banner-svg {
+    height: 110px;
+    min-height: 110px;
+  }
+  .homepage-main-wrapper {
+    max-width: 98vw;
+    margin-top: -40px;
+  }
+  .homepage-logo-overlap {
+    width: 90px;
+    height: 90px;
+    top: -45px;
+  }
+  .hero-logo-overlap {
+    width: 90px;
+    height: 90px;
+    padding: 6px;
+  }
+  .homepage-card-overlap {
+    margin-top: 36px;
+    padding-top: 45px;
+    border-radius: 14px;
+  }
+  .homepage-banner-bg {
+    height: 180px;
+  }
+} 

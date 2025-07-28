@@ -1,0 +1,268 @@
+{
+  "products": [
+    {
+      "id": "1",
+      "title": "Nike Air Max 270",
+      "price": 1299.99,
+      "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=300&fit=crop",
+      "category": "ayakkabı",
+      "description": "Rahat ve şık spor ayakkabı",
+      "stock": 15,
+      "rating": 4.5,
+      "reviews": 128
+    },
+    {
+      "id": "2",
+      "title": "Adidas Ultraboost 21",
+      "price": 1899.99,
+      "image": "https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=300&h=300&fit=crop",
+      "category": "ayakkabı",
+      "description": "Profesyonel koşu ayakkabısı",
+      "stock": 8,
+      "rating": 4.8,
+      "reviews": 95
+    },
+    {
+      "id": "3",
+      "title": "Apple iPhone 14 Pro",
+      "price": 44999.99,
+      "image": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=300&h=300&fit=crop",
+      "category": "elektronik",
+      "description": "En son teknoloji iPhone",
+      "stock": 12,
+      "rating": 4.9,
+      "reviews": 256
+    },
+    {
+      "id": "4",
+      "title": "Samsung Galaxy S23",
+      "price": 32999.99,
+      "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&h=300&fit=crop",
+      "category": "elektronik",
+      "description": "Güçlü Android telefon",
+      "stock": 20,
+      "rating": 4.7,
+      "reviews": 189
+    },
+    {
+      "id": "5",
+      "title": "Levi's 501 Jeans",
+      "price": 899.99,
+      "image": "https://images.unsplash.com/photo-1542272604-787c3835535d?w=300&h=300&fit=crop",
+      "category": "giyim",
+      "description": "Klasik kot pantolon",
+      "stock": 25,
+      "rating": 4.3,
+      "reviews": 67
+    },
+    {
+      "id": "6",
+      "title": "Zara Blazer Ceket",
+      "price": 1299.99,
+      "image": "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=300&h=300&fit=crop",
+      "category": "giyim",
+      "description": "Şık ofis ceketi",
+      "stock": 10,
+      "rating": 4.6,
+      "reviews": 43
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Elektronik",
+      "slug": "elektronik"
+    },
+    {
+      "id": "2",
+      "name": "Giyim",
+      "slug": "giyim"
+    },
+    {
+      "id": "3",
+      "name": "Ayakkabı",
+      "slug": "ayakkabı"
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "name": "Ahmet Yılmaz",
+      "email": "ahmet@example.com",
+      "password": "123456",
+      "address": "İstanbul, Türkiye"
+    }
+  ],
+  "cart": [],
+  "orders": [
+    {
+      "id": "1",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "1",
+          "quantity": 1,
+          "price": 1299.99
+        }
+      ],
+      "total": 1299.99,
+      "status": "tamamlandı",
+      "date": "2024-01-15"
+    },
+    {
+      "id": "311b",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        },
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        }
+      ],
+      "total": 3799.98,
+      "status": "hazırlanıyor",
+      "date": "2025-07-05"
+    },
+    {
+      "id": "79a0",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        }
+      ],
+      "total": 1899.99,
+      "status": "hazırlanıyor",
+      "date": "2025-07-05"
+    },
+    {
+      "id": "7ce8",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        }
+      ],
+      "total": 1899.99,
+      "status": "hazırlanıyor",
+      "date": "2025-07-05"
+    },
+    {
+      "id": "1c74",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        }
+      ],
+      "total": 1899.99,
+      "status": "hazırlanıyor",
+      "date": "2025-07-05"
+    },
+    {
+      "id": "f376",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        }
+      ],
+      "total": 1899.99,
+      "status": "hazırlanıyor",
+      "date": "2025-07-10"
+    },
+    {
+      "id": "f4f4",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        }
+      ],
+      "total": 1899.99,
+      "status": "hazırlanıyor",
+      "date": "2025-07-10"
+    },
+    {
+      "id": "ebea",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        }
+      ],
+      "total": 1899.99,
+      "status": "hazırlanıyor",
+      "date": "2025-07-11"
+    },
+    {
+      "id": "8085",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "1",
+          "quantity": 1,
+          "price": 1299.99
+        },
+        {
+          "productId": "2",
+          "quantity": 1,
+          "price": 1899.99
+        }
+      ],
+      "total": 3199.98,
+      "status": "hazırlanıyor",
+      "date": "2025-07-15"
+    },
+    {
+      "id": "87b9",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "1",
+          "quantity": 4,
+          "price": 1299.99
+        },
+        {
+          "productId": "1",
+          "quantity": 1,
+          "price": 1299.99
+        }
+      ],
+      "total": 6499.95,
+      "status": "hazırlanıyor",
+      "date": "2025-07-18"
+    },
+    {
+      "id": "3def",
+      "userId": "1",
+      "products": [
+        {
+          "productId": "1",
+          "quantity": 1,
+          "price": 1299.99
+        }
+      ],
+      "total": 1299.99,
+      "status": "hazırlanıyor",
+      "date": "2025-07-18"
+    }
+  ]
+}
