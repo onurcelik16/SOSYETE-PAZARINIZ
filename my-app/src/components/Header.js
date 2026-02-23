@@ -37,6 +37,7 @@ const Header = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
     setShowUserDropdown(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [window.location.pathname]);
 
   const handleLogout = () => {

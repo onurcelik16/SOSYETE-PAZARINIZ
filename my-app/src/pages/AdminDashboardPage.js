@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import AdminDashboardLayout from '../components/AdminDashboardLayout';
 import './AdminDashboardPage.css';
-import { FaBox, FaShoppingCart, FaUsers, FaTag, FaArrowUp, FaArrowDown, FaCalendarAlt, FaExclamationTriangle } from 'react-icons/fa';
+import { FaBox, FaShoppingCart, FaUsers, FaTag, FaExclamationTriangle } from 'react-icons/fa';
 import { getDashboardStats, getStockAlerts } from '../services/api';
 
 const AdminDashboardPage = () => {
