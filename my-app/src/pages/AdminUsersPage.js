@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getUsers, updateUserRole } from '../services/api';
 import { useToast } from '../components/Toast';
 import AdminDashboardLayout from '../components/AdminDashboardLayout';
-import { FaSearch, FaUserShield, FaUser, FaEllipsisV } from 'react-icons/fa';
+import { FaSearch, FaUserShield, FaUser } from 'react-icons/fa';
 import './AdminUsersPage.css';
 
 const AdminUsersPage = () => {
