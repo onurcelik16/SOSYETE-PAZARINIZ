@@ -23,7 +23,7 @@ Modern ve kullanıcı dostu e-ticaret platformu. React.js frontend ve Node.js ba
 - **Ürün Yönetimi:** Ürün ekleme, düzenleme, silme
 - **Sipariş Yönetimi:** Sipariş durumu güncelleme
 - **Kullanıcı Yönetimi:** Kullanıcı listesi ve detayları
-- **Dashboard:** Satış istatistikleri ve grafikler
+  
 
 ## 🚀 Kurulum
 
@@ -144,9 +144,9 @@ SOSYETE-PAZARINIZ/
 
 ## 📧 İletişim
 
-- **Email:** [your-email@example.com]
+- **Email:** [celikonur10@example.com]
 - **GitHub:** [https://github.com/onurcelik16]
-- **LinkedIn:** [your-linkedin-profile]
+- **LinkedIn:** [https://www.linkedin.com/in/onur-%C3%A7elik-772832303/]
 
 ## 📄 Lisans
 
@@ -162,11 +162,5 @@ Bu proje MIT lisansı altında lisanslanmıştır.
 
 ## 🙏 Teşekkürler
 
-- React.js ekibine
-- Node.js topluluğuna
-- MongoDB Atlas'a
-- Tüm açık kaynak projelere
-
----
 
 **SOSYETE PAZARINIZ** - Modern alışverişin yeni adresi! 🛍️✨ 
