@@ -1,84 +1,170 @@
-import React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { useFavorites } from '../context/FavoritesContext';
 import './Header.css';
-import { FaUserCircle } from 'react-icons/fa';
+import { FaUser, FaShoppingBag, FaBars, FaTimes, FaSearch, FaSignOutAlt, FaBox, FaHeart } from 'react-icons/fa';
 
 const Header = () => {
   const { getCartItemCount } = useCart();
-  const { getFavoritesCount } = useFavorites();
   const { isAuthenticated, logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [showUserMenu, setShowUserMenu] = React.useState(false);
+
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Sadece header scroll efekti için
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Mobil menü açıkken scroll'u engelle
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [mobileMenuOpen]);
+
+  // Sayfa değişince mobil menüyü kapat
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setShowUserDropdown(false);
+  }, [window.location.pathname]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
-    window.location.reload();
   };
 
-  const handleProfileClick = () => {
-    setShowUserMenu(false);
-    navigate('/profile');
-  };
-
-  const handleUserIconClick = () => {
-    setShowUserMenu((prev) => !prev);
-  };
-
-  React.useEffect(() => {
-    function handleClickOutside(e) {
-      if (!e.target.closest('.user-menu') && !e.target.closest('.user-icon')) {
-        setShowUserMenu(false);
-      }
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+      setMobileMenuOpen(false);
+      setSearchQuery('');
     }
-    if (showUserMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showUserMenu]);
+  };
 
   return (
-    <header className="header">
+    <header className={`header ${isScrolled ? 'header-scrolled' : ''}`}>
       <div className="header-container">
-        <div className="logo">
-          <Link to="/" className="logo-link">
-            <img src="/logo.png" alt="Sosyete Pazarı Logo" className="header-logo-img" />
-            <span className="header-logo-text">Sosyete Pazarı</span>
+        {/* Mobile Toggle */}
+        <button
+          className="mobile-toggle"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Menüyü Aç"
+        >
+          {mobileMenuOpen ? <FaTimes /> : <FaBars />}
+        </button>
+
+        {/* Logo */}
+        <Link to="/" className="logo">
+          <span className="logo-icon">🛍️</span>
+          <span className="logo-text">Sosyete<span className="logo-accent">Pazarı</span></span>
+        </Link>
+
+        {/* Desktop Search */}
+        <form className="search-bar desktop-search" onSubmit={handleSearch}>
+          <div className="search-input-wrapper">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Ürün, kategori veya marka ara..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </form>
+
+        {/* Actions */}
+        <div className="header-actions">
+          {isAuthenticated ? (
+            <div className="user-dropdown-container">
+              <button
+                className="action-btn user-btn"
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+              >
+                <FaUser />
+                <span className="user-name d-none-mobile">{user?.name}</span>
+              </button>
+
+              {showUserDropdown && (
+                <div className="dropdown-menu">
+                  <div className="dropdown-header">
+                    <strong>{user?.name} {user?.surname}</strong>
+                    <span className="user-email">{user?.email}</span>
+                  </div>
+                  <Link to="/profile" className="dropdown-item"><FaUser /> Profilim</Link>
+                  <Link to="/orders" className="dropdown-item"><FaBox /> Siparişlerim</Link>
+                  <Link to="/favorites" className="dropdown-item"><FaHeart /> Favorilerim</Link>
+                  {user?.role === 'admin' && (
+                    <Link to="/admin" className="dropdown-item admin-link">⚡ Admin Paneli</Link>
+                  )}
+                  <div className="dropdown-divider"></div>
+                  <button onClick={handleLogout} className="dropdown-item text-danger">
+                    <FaSignOutAlt /> Çıkış Yap
+                  </button>
+                </div>
+              )}
+
+              {/* Backdrop for dropdown */}
+              {showUserDropdown && (
+                <div
+                  className="dropdown-backdrop"
+                  onClick={() => setShowUserDropdown(false)}
+                />
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="action-btn login-link">
+              <FaUser />
+              <span className="d-none-mobile">Giriş Yap</span>
+            </Link>
+          )}
+
+          <Link to="/cart" className="action-btn cart-btn">
+            <FaShoppingBag />
+            {getCartItemCount() > 0 && (
+              <span className="cart-badge">{getCartItemCount()}</span>
+            )}
           </Link>
         </div>
-        <nav className="nav">
-          <Link to="/" className="nav-link">Ana Sayfa</Link>
-          <Link to="/products" className="nav-link">Ürünler</Link>
-          <Link to="/cart" className="nav-link">Sepet</Link>
-          <Link to="/favorites" className="nav-link">Favoriler</Link>
-          <Link to="/orders" className="nav-link">Siparişlerim</Link>
-          <Link to="/track-order" className="nav-link">Sipariş Takip</Link>
-          {isAuthenticated ? (
-            null
-          ) : (
-            <Link className="nav-link" to="/login">Giriş Yap</Link>
-          )}
-        </nav>
-        <div className="cart-icon" style={{ display: 'flex', alignItems: 'center', gap: 24, position: 'relative' }}>
-          <Link to="/cart" className="cart-link" style={{ display: 'flex', alignItems: 'center' }}>
-            🛒 <span className="cart-count">{getCartItemCount()}</span>
-          </Link>
-          <span className="user-icon" style={{ cursor: 'pointer', fontSize: 32, display: 'flex', alignItems: 'center' }} onClick={handleUserIconClick}>
-            <FaUserCircle />
-          </span>
-          {showUserMenu && isAuthenticated && (
-            <div className="user-menu" style={{ position: 'absolute', top: 54, right: -10, background: '#fff', boxShadow: '0 2px 16px #1976d233', borderRadius: 12, padding: 20, zIndex: 100, minWidth: 170, width: 200, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-              <button onClick={handleProfileClick} style={{ display: 'block', width: '100%', background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 0', marginBottom: 10, fontWeight: 600, cursor: 'pointer', fontSize: 16 }}>Profilim</button>
-              {user?.role === 'admin' && (
-                <button onClick={() => { setShowUserMenu(false); navigate('/admin'); }} style={{ display: 'block', width: '100%', background: '#dc3545', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 0', marginBottom: 10, fontWeight: 600, cursor: 'pointer', fontSize: 16 }}>Admin Panel</button>
-              )}
-              <button onClick={handleLogout} style={{ display: 'block', width: '100%', background: '#eee', color: '#333', border: 'none', borderRadius: 8, padding: '10px 0', fontWeight: 500, cursor: 'pointer', fontSize: 15 }}>Çıkış Yap</button>
+      </div>
+
+      {/* Mobile Menu & Search Overlay */}
+      <div className={`mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
+        <div className="mobile-menu-content">
+          <form className="mobile-search-form" onSubmit={handleSearch}>
+            <FaSearch className="mobile-search-icon" />
+            <input
+              type="text"
+              placeholder="Ne aramıştınız?"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </form>
+
+          <nav className="mobile-nav">
+            <Link to="/" className="mobile-nav-link">Ana Sayfa</Link>
+            <Link to="/products" className="mobile-nav-link">Tüm Ürünler</Link>
+            <Link to="/products?category=Elektronik" className="mobile-nav-link">Elektronik</Link>
+            <Link to="/products?category=Moda" className="mobile-nav-link">Moda</Link>
+            <Link to="/products?category=Ev" className="mobile-nav-link">Ev & Yaşam</Link>
+            <Link to="/track-order" className="mobile-nav-link">Sipariş Takip</Link>
+          </nav>
+
+          {!isAuthenticated && (
+            <div className="mobile-auth-buttons">
+              <Link to="/login" className="btn btn-primary w-100">Giriş Yap</Link>
+              <Link to="/register" className="btn btn-secondary w-100">Kayıt Ol</Link>
             </div>
           )}
         </div>
@@ -87,4 +173,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;

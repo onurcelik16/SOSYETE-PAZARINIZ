@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaUser, FaEnvelope, FaLock, FaIdCard, FaTransgender, FaBirthdayCake } from 'react-icons/fa';
+import { registerUser } from '../services/api';
 import './LoginRegisterPage.css';
 
 const RegisterPage = () => {
@@ -15,6 +16,7 @@ const RegisterPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -22,13 +24,21 @@ const RegisterPage = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const res = await fetch('http://localhost:5000/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-    const data = await res.json();
-    setMessage(data.message || 'Kayıt tamamlandı!');
+    setLoading(true);
+    setMessage('');
+    try {
+      const response = await registerUser(form);
+      setMessage(response.data.message || 'Kayıt tamamlandı!');
+    } catch (err) {
+      const errors = err.response?.data?.errors;
+      if (errors && Array.isArray(errors)) {
+        setMessage(errors.join(', '));
+      } else {
+        setMessage(err.response?.data?.message || 'Kayıt başarısız!');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,14 +76,16 @@ const RegisterPage = () => {
           </div>
           <div className="lrp-field">
             <FaEnvelope className="lrp-icon" />
-            <input type="email" placeholder="E-posta" value={form.email} onChange={handleChange} name="email" required className="lrp-input" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$" />
+            <input type="email" placeholder="E-posta" value={form.email} onChange={handleChange} name="email" required className="lrp-input" />
           </div>
           <div className="lrp-field">
             <FaLock className="lrp-icon" />
-            <input type={showPassword ? 'text' : 'password'} placeholder="Şifre" value={form.password} onChange={handleChange} name="password" required className="lrp-input" pattern="^(?=.*[A-Z]).{8,}$" title="Şifre en az 8 karakter ve en az bir büyük harf içermelidir." />
+            <input type={showPassword ? 'text' : 'password'} placeholder="Şifre (en az 8 karakter, 1 büyük harf)" value={form.password} onChange={handleChange} name="password" required className="lrp-input" minLength={8} />
             <span className="lrp-show" onClick={() => setShowPassword(s => !s)}>{showPassword ? 'GİZLE' : 'GÖSTER'}</span>
           </div>
-          <button type="submit" className="lrp-btn-main">ÜYE OL</button>
+          <button type="submit" className="lrp-btn-main" disabled={loading}>
+            {loading ? 'KAYIT YAPILIYOR...' : 'ÜYE OL'}
+          </button>
         </form>
         {message && <div className="lrp-message">{message}</div>}
         <div className="lrp-switch">
@@ -84,4 +96,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage; 
+export default RegisterPage;

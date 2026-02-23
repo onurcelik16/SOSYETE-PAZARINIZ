@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getOrderDetail } from '../services/api';
 import './OrderDetailPage.css';
+import { FaBox, FaTruck, FaCheckCircle, FaTimesCircle, FaMapMarkerAlt, FaPhone, FaArrowLeft, FaCreditCard, FaCalendarAlt } from 'react-icons/fa';
 
 const OrderDetailPage = () => {
   const { orderId } = useParams();
@@ -14,151 +15,144 @@ const OrderDetailPage = () => {
       try {
         setLoading(true);
         const response = await getOrderDetail(orderId);
-        console.log('Sipariş detayı:', response.data);
-        console.log('Ürünler:', response.data.products);
         setOrder(response.data);
       } catch (err) {
         setError('Sipariş detayı yüklenemedi');
-        console.error('Sipariş detayı hatası:', err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchOrder();
   }, [orderId]);
 
-  const getStatusColor = (status) => {
+  const getStatusIcon = (status) => {
     switch (status) {
-      case 'beklemede': return '#ff9800';
-      case 'hazırlanıyor': return '#2196f3';
-      case 'kargoda': return '#9c27b0';
-      case 'teslim edildi': return '#4caf50';
-      case 'iptal edildi': return '#f44336';
-      default: return '#757575';
+      case 'beklemede': return <FaBox />;
+      case 'hazırlanıyor': return <FaBox />;
+      case 'kargoda': return <FaTruck />;
+      case 'teslim edildi': return <FaCheckCircle />;
+      case 'iptal edildi': return <FaTimesCircle />;
+      default: return <FaBox />;
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'beklemede': return 'Beklemede';
-      case 'hazırlanıyor': return 'Hazırlanıyor';
-      case 'kargoda': return 'Kargoda';
-      case 'teslim edildi': return 'Teslim Edildi';
-      case 'iptal edildi': return 'İptal Edildi';
-      default: return status;
-    }
-  };
+  if (loading) return <div className="order-page-loading"><div className="spinner"></div></div>;
 
-  if (loading) {
-    return (
-      <div className="order-detail-container">
-        <div className="loading">Yükleniyor...</div>
+  if (error || !order) return (
+    <div className="order-error-container">
+      <div className="error-card">
+        <h2>Sipariş Bulunamadı</h2>
+        <p>{error || 'İstediğiniz siparişe ulaşılamadı.'}</p>
+        <Link to="/orders" className="btn btn-primary">Siparişlerime Dön</Link>
       </div>
-    );
-  }
-
-  if (error || !order) {
-    return (
-      <div className="order-detail-container">
-        <div className="error">
-          <h2>Hata</h2>
-          <p>{error || 'Sipariş bulunamadı'}</p>
-          <Link to="/orders" className="back-link">Siparişlerime Dön</Link>
-        </div>
-      </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="order-detail-container">
-      <div className="order-detail-header">
-        <h1 style={{ fontSize: '1.8rem', fontWeight: '600', color: '#333', margin: '0' }}>Sipariş Detayı</h1>
-        <Link to="/orders" className="back-link">← Siparişlerime Dön</Link>
-      </div>
-
-      <div className="order-info-grid">
-        {/* Sipariş Bilgileri */}
-        <div className="order-info-card">
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333', margin: '0 0 20px 0', borderBottom: '2px solid #f0f0f0', paddingBottom: '10px' }}>Sipariş Bilgileri</h3>
-          <div className="info-item">
-            <span className="label">Takip Numarası:</span>
-            <span className="value tracking-number">{order.trackingNumber}</span>
-          </div>
-          <div className="info-item">
-            <span className="label">Sipariş Tarihi:</span>
-            <span className="value">{new Date(order.createdAt).toLocaleDateString('tr-TR')}</span>
-          </div>
-          <div className="info-item">
-            <span className="label">Toplam Tutar:</span>
-            <span className="value total-price">₺{order.total.toFixed(2)}</span>
-          </div>
-          <div className="info-item">
-            <span className="label">Durum:</span>
-            <span 
-              className="value status-badge"
-              style={{ backgroundColor: getStatusColor(order.status) }}
-            >
-              {getStatusText(order.status)}
-            </span>
-          </div>
-        </div>
-
-        {/* Teslimat Bilgileri */}
-        <div className="order-info-card">
-          <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333', margin: '0 0 20px 0', borderBottom: '2px solid #f0f0f0', paddingBottom: '10px' }}>Teslimat Bilgileri</h3>
-          <div className="info-item">
-            <span className="label">Adres:</span>
-            <span className="value">{order.address}</span>
-          </div>
-          <div className="info-item">
-            <span className="label">Telefon:</span>
-            <span className="value">{order.phone}</span>
-          </div>
+    <div className="order-detail-page">
+      <div className="order-header">
+        <Link to="/orders" className="back-btn"><FaArrowLeft /> Geri</Link>
+        <div className="header-title">
+          <h1>Sipariş #{order.trackingNumber || order._id.slice(-6).toUpperCase()}</h1>
+          <span className={`status-badge-lg ${order.status.replace(' ', '-')}`}>
+            {getStatusIcon(order.status)} {order.status.toUpperCase()}
+          </span>
         </div>
       </div>
 
-      {/* Ürünler */}
-      <div className="order-products">
-        <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333', margin: '0 0 20px 0', borderBottom: '2px solid #f0f0f0', paddingBottom: '10px' }}>Sipariş Edilen Ürünler</h3>
-        <div className="products-list">
-          {order.products.map((item, index) => (
-            <div key={index} className="product-item" style={{ padding: '8px', marginBottom: '8px', borderRadius: '6px' }}>
-              <div className="product-info">
-                <h4 style={{ fontSize: '0.9rem', fontWeight: '600', color: '#333', margin: '0 0 4px 0' }}>{item.product.title}</h4>
-                <p style={{ fontSize: '0.85rem', margin: '2px 0', color: '#007bff' }}>₺{item.price.toFixed(2)}</p>
-                <p style={{ fontSize: '0.8rem', margin: '2px 0', color: '#666' }}>Adet: {item.quantity}</p>
-                <p style={{ fontSize: '0.85rem', margin: '2px 0', color: '#28a745', fontWeight: '600' }}>Toplam: ₺{(item.price * item.quantity).toFixed(2)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Durum Geçmişi */}
-      <div className="status-history">
-        <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#333', margin: '0 0 20px 0', borderBottom: '2px solid #f0f0f0', paddingBottom: '10px' }}>Sipariş Durumu Geçmişi</h3>
-        <div className="timeline">
-          {order.statusHistory.map((history, index) => (
-            <div key={index} className="timeline-item">
-              <div className="timeline-marker" style={{ backgroundColor: getStatusColor(history.status) }}></div>
-              <div className="timeline-content">
-                <div className="timeline-header">
-                  <span className="timeline-status" style={{ color: getStatusColor(history.status) }}>
-                    {getStatusText(history.status)}
-                  </span>
-                  <span className="timeline-date">
-                    {new Date(history.date).toLocaleDateString('tr-TR')} - {new Date(history.date).toLocaleTimeString('tr-TR')}
-                  </span>
+      <div className="order-content-grid">
+        {/* Sol Kolon: Ürünler ve Durum */}
+        <div className="main-col">
+          {/* Ürün Listesi */}
+          <div className="card product-list-card">
+            <h3>Sipariş İçeriği</h3>
+            <div className="product-list">
+              {order.products.map((item, index) => (
+                <div key={index} className="order-product-item">
+                  <div className="p-img">
+                    <img src={item.product.image || (item.product.images?.[0]) || 'https://via.placeholder.com/100'} alt={item.product.title} />
+                  </div>
+                  <div className="p-details">
+                    <h4>{item.product.title}</h4>
+                    <span className="p-meta">Adet: {item.quantity}</span>
+                  </div>
+                  <div className="p-price">
+                    {item.price.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+                  </div>
                 </div>
-                {history.note && <p className="timeline-note">{history.note}</p>}
+              ))}
+            </div>
+            <div className="order-summary-footer">
+              <div className="summary-row total">
+                <span>Toplam Tutar</span>
+                <span>{order.total.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}</span>
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Timeline */}
+          <div className="card timeline-card">
+            <h3>Sipariş Geçmişi</h3>
+            <div className="timeline-vertical">
+              {order.statusHistory.slice().reverse().map((history, index) => (
+                <div key={index} className={`timeline-step ${index === 0 ? 'current' : ''}`}>
+                  <div className="step-marker"></div>
+                  <div className="step-content">
+                    <div className="step-header">
+                      <span className="step-status">{history.status}</span>
+                      <span className="step-date">
+                        {new Date(history.date).toLocaleDateString('tr-TR')} {new Date(history.date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    {history.note && <p className="step-note">{history.note}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Sağ Kolon: Bilgiler */}
+        <div className="side-col">
+          <div className="card info-card">
+            <h3>Teslimat Bilgileri</h3>
+            <div className="info-group">
+              <div className="info-icon"><FaMapMarkerAlt /></div>
+              <div className="info-text">
+                <label>Teslimat Adresi</label>
+                <p>{order.address}</p>
+              </div>
+            </div>
+            <div className="info-group">
+              <div className="info-icon"><FaPhone /></div>
+              <div className="info-text">
+                <label>Telefon</label>
+                <p>{order.phone}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="card info-card">
+            <h3>Ödeme Detayları</h3>
+            <div className="info-group">
+              <div className="info-icon"><FaCreditCard /></div>
+              <div className="info-text">
+                <label>Ödeme Yöntemi</label>
+                <p>Kredi Kartı / Banka Kartı</p>
+              </div>
+            </div>
+            <div className="info-group">
+              <div className="info-icon"><FaCalendarAlt /></div>
+              <div className="info-text">
+                <label>Sipariş Tarihi</label>
+                <p>{new Date(order.createdAt).toLocaleDateString('tr-TR')}</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default OrderDetailPage; 
+export default OrderDetailPage;

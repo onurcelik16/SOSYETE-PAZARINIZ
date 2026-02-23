@@ -1,22 +1,26 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  guestEmail: { type: String },
+  guestName: { type: String },
   products: [
     {
       product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
       quantity: { type: Number, required: true },
-      price: { type: Number, required: true }
+      price: { type: Number, required: true },
+      selectedVariant: { type: Map, of: String, default: null }
     }
   ],
   total: { type: Number, required: true },
   address: { type: String, required: true },
   phone: { type: String, required: true },
   trackingNumber: { type: String, unique: true },
-  status: { 
-    type: String, 
+  status: {
+    type: String,
     enum: ['beklemede', 'hazırlanıyor', 'kargoda', 'teslim edildi', 'iptal edildi'],
-    default: 'beklemede' 
+    default: 'beklemede',
+    index: true
   },
   statusHistory: [
     {
@@ -29,16 +33,29 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Takip numarası oluşturma middleware
-orderSchema.pre('save', async function(next) {
+orderSchema.pre('save', async function (next) {
   if (!this.trackingNumber) {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    this.trackingNumber = `TRK${year}${month}${day}${random}`;
+
+    // 8 haneli random sayı ile çakışma riski minimuma indirildi
+    let attempts = 0;
+    let trackingNumber;
+    const Order = this.constructor;
+
+    do {
+      const random = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+      trackingNumber = `TRK${year}${month}${day}${random}`;
+      const existing = await Order.findOne({ trackingNumber });
+      if (!existing) break;
+      attempts++;
+    } while (attempts < 5);
+
+    this.trackingNumber = trackingNumber;
   }
-  
+
   // İlk durum geçmişini ekle
   if (this.statusHistory.length === 0) {
     this.statusHistory.push({
@@ -47,7 +64,7 @@ orderSchema.pre('save', async function(next) {
       note: 'Sipariş oluşturuldu'
     });
   }
-  
+
   next();
 });
 

@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { getMe } from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -13,35 +14,42 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchUser = async () => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:5000/api/auth/me', {
-        headers: { Authorization: 'Bearer ' + token }
-      })
-        .then(res => res.json())
-        .then(data => {
-          console.log("auth/me response:", data);
-          if (!data.message) setUser(data);
-        });
+      try {
+        const response = await getMe();
+        setUser(response.data);
+        setIsAuthenticated(true);
+      } catch (err) {
+        // Token geçersiz veya süresi dolmuş
+        localStorage.removeItem('token');
+        setUser(null);
+        setIsAuthenticated(false);
+      }
     } else {
       setUser(null);
+      setIsAuthenticated(false);
     }
-    setIsAuthenticated(!!token);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchUser();
   }, []);
 
-  const login = (token) => {
+  const login = async (token) => {
     localStorage.setItem('token', token);
     setIsAuthenticated(true);
-    fetch('http://localhost:5000/api/auth/me', {
-      headers: { Authorization: 'Bearer ' + token }
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log("login sonrası user:", data);
-        if (!data.message) setUser(data);
-      });
+    try {
+      const response = await getMe();
+      setUser(response.data);
+      return response.data;
+    } catch (err) {
+      // Hata durumunda
+    }
   };
 
   const logout = () => {
@@ -51,8 +59,8 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
-} 
+}

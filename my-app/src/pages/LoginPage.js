@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaUser, FaLock } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
+import { loginUser } from '../services/api';
 import './LoginRegisterPage.css';
 
 const LoginPage = () => {
@@ -8,23 +10,32 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const res = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      setMessage('Giriş başarılı!');
-      navigate('/products');
-      window.location.reload();
-    } else {
-      setMessage(data.message || 'Giriş başarısız!');
+    setLoading(true);
+    setMessage('');
+    try {
+      const response = await loginUser({ email, password });
+      const data = response.data;
+      if (data.token) {
+        const user = await login(data.token);
+        setMessage('Giriş başarılı!');
+        if (user && user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
+      } else {
+        setMessage(data.message || 'Giriş başarısız!');
+      }
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Giriş başarısız!');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,7 +72,9 @@ const LoginPage = () => {
               {showPassword ? 'GİZLE' : 'GÖSTER'}
             </span>
           </div>
-          <button type="submit" className="lrp-btn-main">GİRİŞ YAP</button>
+          <button type="submit" className="lrp-btn-main" disabled={loading}>
+            {loading ? 'GİRİŞ YAPILIYOR...' : 'GİRİŞ YAP'}
+          </button>
         </form>
         <div className="lrp-bottom-text">
           <Link to="/forgot-password">Şifremi Unuttum?</Link>
@@ -75,4 +88,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

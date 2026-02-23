@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { forgotPassword } from '../services/api';
 import './LoginRegisterPage.css';
 
 const ForgotPasswordPage = () => {
@@ -11,19 +12,15 @@ const ForgotPasswordPage = () => {
     setLoading(true);
     setMessage('');
     try {
-      const res = await fetch('http://localhost:5000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
+      const response = await forgotPassword(email);
+      const data = response.data;
       if (data.success) {
         setMessage('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.');
       } else {
         setMessage(data.message || 'Bir hata oluştu.');
       }
     } catch (err) {
-      setMessage('Bir hata oluştu.');
+      setMessage(err.response?.data?.message || 'Bir hata oluştu.');
     } finally {
       setLoading(false);
     }

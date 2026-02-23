@@ -1,92 +1,135 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { CartProvider } from "./context/CartContext";
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { FavoritesProvider } from './context/FavoritesContext';
+import { ToastProvider } from './components/Toast';
+import { HelmetProvider } from 'react-helmet-async';
 import Header from "./components/Header";
-import HomePage from "./pages/HomePage";
-import CartPage from "./pages/CartPage";
-import ProductDetailPage from "./pages/ProductDetailPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import OrderSuccessPage from "./pages/OrderSuccessPage";
-import ProductsPage from "./pages/ProductsPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ProfilePage from './pages/ProfilePage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import AddProductPage from './pages/AddProductPage';
-import OrdersPage from './pages/OrdersPage';
-import OrderDetailPage from './pages/OrderDetailPage';
-import TrackOrderPage from './pages/TrackOrderPage';
-import AdminOrdersPage from './pages/AdminOrdersPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
-import FavoritesPage from './pages/FavoritesPage';
-import EditProductPage from './pages/EditProductPage';
-import { FaInstagram, FaTwitter, FaFacebook } from 'react-icons/fa';
+import Footer from "./components/Footer";
 import "./App.css";
 
+// Lazy-loaded pages (Code Splitting)
+const HomePage = lazy(() => import("./pages/HomePage"));
+const CartPage = lazy(() => import("./pages/CartPage"));
+const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
+const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
+const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage"));
+const ProductsPage = lazy(() => import("./pages/ProductsPage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const AddProductPage = lazy(() => import('./pages/AddProductPage'));
+const OrdersPage = lazy(() => import('./pages/OrdersPage'));
+const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
+const TrackOrderPage = lazy(() => import('./pages/TrackOrderPage'));
+const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+const FavoritesPage = lazy(() => import('./pages/FavoritesPage'));
+const EditProductPage = lazy(() => import('./pages/EditProductPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'));
+const AdminCouponsPage = lazy(() => import('./pages/AdminCouponsPage'));
+const AdminProductsPage = lazy(() => import('./pages/AdminProductsPage'));
+const AdminCategoriesPage = lazy(() => import('./pages/AdminCategoriesPage'));
+
+// Loading fallback
+const PageLoader = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '60vh'
+  }}>
+    <div style={{
+      width: '40px',
+      height: '40px',
+      border: '3px solid #f3f3f3',
+      borderTop: '3px solid var(--primary, #6366f1)',
+      borderRadius: '50%',
+      animation: 'spin 0.8s linear infinite'
+    }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
+
 function ProtectedRoute({ children }) {
-  const token = localStorage.getItem('token');
-  if (!token) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   return children;
 }
 
+function AdminRoute({ children }) {
+  const { isAuthenticated, user, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 function AppContent() {
-  const location = useLocation();
   return (
-    <div className="App" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="App">
       <Header />
-      <main className="main-content" style={{ flex: 1 }}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/product/:id" element={<ProductDetailPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/order-success" element={<OrderSuccessPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/add-product" element={<AddProductPage />} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
-          <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
-          <Route path="/track-order" element={<TrackOrderPage />} />
-          <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />
-          <Route path="/admin/orders" element={<ProtectedRoute><AdminOrdersPage /></ProtectedRoute>} />
-          <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
-          <Route path="/edit-product/:id" element={<ProtectedRoute><EditProductPage /></ProtectedRoute>} />
-        </Routes>
+      <main className="main-content">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/product/:slug" element={<ProductDetailPage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/order-success" element={<OrderSuccessPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/add-product" element={<AdminRoute><AddProductPage /></AdminRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+            <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+            <Route path="/track-order" element={<TrackOrderPage />} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+            <Route path="/admin/orders" element={<AdminRoute><AdminOrdersPage /></AdminRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+            <Route path="/admin/products" element={<AdminRoute><AdminProductsPage /></AdminRoute>} />
+            <Route path="/admin/coupons" element={<AdminRoute><AdminCouponsPage /></AdminRoute>} />
+            <Route path="/admin/categories" element={<AdminRoute><AdminCategoriesPage /></AdminRoute>} />
+            <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+            <Route path="/edit-product/:id" element={<AdminRoute><EditProductPage /></AdminRoute>} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
       </main>
-      {location.pathname !== "/login" && (
-        <footer style={{ width: '100%', background: '#23272f', padding: '32px 0 18px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 32 }}>
-          <div style={{ display: 'flex', gap: 22, marginBottom: 6 }}>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', fontSize: 28 }}><FaInstagram /></a>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', fontSize: 28 }}><FaTwitter /></a>
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', fontSize: 28 }}><FaFacebook /></a>
-          </div>
-          <div style={{ color: '#fff', fontWeight: 600, fontSize: 15, letterSpacing: 0.5 }}>Sosyete Pazarı &copy; {new Date().getFullYear()} - Modern Alışverişin Yeni Adı</div>
-        </footer>
-      )}
+      <Footer />
     </div>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <CartProvider>
-          <FavoritesProvider>
-            <AppContent />
-          </FavoritesProvider>
-        </CartProvider>
-      </Router>
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <Router>
+          <ToastProvider>
+            <CartProvider>
+              <FavoritesProvider>
+                <AppContent />
+              </FavoritesProvider>
+            </CartProvider>
+          </ToastProvider>
+        </Router>
+      </AuthProvider>
+    </HelmetProvider>
   );
 }
 

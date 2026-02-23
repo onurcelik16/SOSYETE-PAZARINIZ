@@ -2,197 +2,229 @@ import React, { useState, useEffect } from 'react';
 import { getAllOrders, updateOrderStatus } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../components/Toast';
+import AdminDashboardLayout from '../components/AdminDashboardLayout';
+import { FaSearch, FaEye, FaCheck, FaTruck, FaBox, FaTimes, FaFilter, FaCalendarAlt } from 'react-icons/fa';
 import './AdminOrdersPage.css';
 
 const AdminOrdersPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updatingOrder, setUpdatingOrder] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
+
+  // Filters
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Admin kontrolü
     if (!user || user.role !== 'admin') {
       navigate('/');
       return;
     }
-
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate]);
+
+  // Filter Logic
+  useEffect(() => {
+    let result = orders;
+
+    if (statusFilter !== 'all') {
+      result = result.filter(o => o.status === statusFilter);
+    }
+
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase();
+      result = result.filter(o =>
+        o._id.toLowerCase().includes(lowerTerm) ||
+        o.trackingNumber?.toLowerCase().includes(lowerTerm) ||
+        o.user?.name?.toLowerCase().includes(lowerTerm) ||
+        o.user?.email?.toLowerCase().includes(lowerTerm)
+      );
+    }
+
+    setFilteredOrders(result);
+  }, [orders, statusFilter, searchTerm]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const response = await getAllOrders();
-      setOrders(response.data);
+      // Sort by newest first
+      const sorted = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setOrders(sorted);
+      setFilteredOrders(sorted);
     } catch (err) {
-      console.error('Siparişler yüklenemedi:', err);
+      toast.error('Siparişler yüklenemedi');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusUpdate = async (orderId, newStatus, note) => {
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    if (!window.confirm(`Sipariş durumunu "${newStatus}" olarak değiştirmek istiyor musunuz?`)) return;
+
     try {
-      setUpdatingOrder(orderId);
-      await updateOrderStatus(orderId, { status: newStatus, note });
-      
-      // Siparişleri yeniden yükle
-      await fetchOrders();
-      
-      alert('Sipariş durumu başarıyla güncellendi!');
+      setUpdatingId(orderId);
+      await updateOrderStatus(orderId, { status: newStatus });
+
+      // Optimistic update
+      const updatedOrders = orders.map(o =>
+        o._id === orderId ? { ...o, status: newStatus } : o
+      );
+      setOrders(updatedOrders);
+
+      toast.success('Sipariş durumu güncellendi');
     } catch (err) {
-      alert('Durum güncellenirken hata oluştu!');
-      console.error('Durum güncelleme hatası:', err);
+      toast.error('Guncelleme başarısız');
+      fetchOrders(); // Revert on error
     } finally {
-      setUpdatingOrder(null);
+      setUpdatingId(null);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'beklemede': return '#ff9800';
-      case 'hazırlanıyor': return '#2196f3';
-      case 'kargoda': return '#9c27b0';
-      case 'teslim edildi': return '#4caf50';
-      case 'iptal edildi': return '#f44336';
-      default: return '#757575';
-    }
+  const statusOptions = [
+    { value: 'beklemede', label: 'Beklemede', color: '#f59e0b', icon: <FaFilter /> },
+    { value: 'hazırlanıyor', label: 'Hazırlanıyor', color: '#3b82f6', icon: <FaBox /> },
+    { value: 'kargoda', label: 'Kargoda', color: '#8b5cf6', icon: <FaTruck /> },
+    { value: 'teslim edildi', label: 'Teslim Edildi', color: '#10b981', icon: <FaCheck /> },
+    { value: 'iptal edildi', label: 'İptal Edildi', color: '#ef4444', icon: <FaTimes /> },
+  ];
+
+  const getStatusBadge = (status) => {
+    const option = statusOptions.find(o => o.value === status) || { label: status, color: '#6b7280' };
+    return (
+      <span className="status-badge-modern" style={{ backgroundColor: option.color + '20', color: option.color }}>
+        {option.label}
+      </span>
+    );
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'beklemede': return 'Beklemede';
-      case 'hazırlanıyor': return 'Hazırlanıyor';
-      case 'kargoda': return 'Kargoda';
-      case 'teslim edildi': return 'Teslim Edildi';
-      case 'iptal edildi': return 'İptal Edildi';
-      default: return status;
-    }
-  };
-
-  if (!user || user.role !== 'admin') {
-    return <div className="admin-error">Bu sayfaya erişim yetkiniz yok.</div>;
-  }
-
-  if (loading) {
-    return <div className="loading">Siparişler yükleniyor...</div>;
-  }
+  if (loading && orders.length === 0) return <AdminDashboardLayout title="Siparişler"><div>Yükleniyor...</div></AdminDashboardLayout>;
 
   return (
-    <div className="admin-orders-container">
-      <div className="admin-header">
-        <h1>Admin - Sipariş Yönetimi</h1>
-        <p>Toplam {orders.length} sipariş</p>
-      </div>
+    <AdminDashboardLayout title="Sipariş Yönetimi" subtitle="Gelen siparişleri takip edin ve yönetin">
+      <div className="admin-orders-wrapper">
 
-      <div className="orders-grid">
-        {orders.map(order => (
-          <div key={order._id} className="order-card">
-            <div className="order-header">
-              <div className="order-info">
-                <h3>Sipariş #{order.trackingNumber}</h3>
-                <p className="order-date">
-                  {new Date(order.createdAt).toLocaleDateString('tr-TR')} - {new Date(order.createdAt).toLocaleTimeString('tr-TR')}
-                </p>
-                <p className="customer-info">
-                  <strong>Müşteri:</strong> {order.user?.name || 'Bilinmeyen'} ({order.user?.email || 'Email yok'})
-                </p>
-                <p className="order-total">
-                  <strong>Toplam:</strong> ₺{order.total.toFixed(2)}
-                </p>
-              </div>
-              <div className="order-status">
-                <span 
-                  className="status-badge"
-                  style={{ backgroundColor: getStatusColor(order.status) }}
-                >
-                  {getStatusText(order.status)}
-                </span>
-              </div>
-            </div>
+        {/* Statistics Cards (Optional - could be added here) */}
 
-            <div className="order-details">
-              <div className="detail-item">
-                <strong>Adres:</strong> {order.address}
-              </div>
-              <div className="detail-item">
-                <strong>Telefon:</strong> {order.phone}
-              </div>
-            </div>
-
-            <div className="order-products">
-              <h4>Ürünler:</h4>
-              <ul>
-                {order.products.map((item, index) => (
-                  <li key={index}>
-                    {item.product?.title} x {item.quantity} (₺{item.price.toFixed(2)})
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="status-update-section">
-              <h4>Durum Güncelle</h4>
-              <div className="status-controls">
-                <select 
-                  className="status-select"
-                  defaultValue={order.status}
-                  onChange={(e) => {
-                    const newStatus = e.target.value;
-                    const note = prompt('Durum güncellemesi için not ekleyin (opsiyonel):');
-                    if (newStatus !== order.status) {
-                      handleStatusUpdate(order._id, newStatus, note);
-                    }
-                  }}
-                  disabled={updatingOrder === order._id}
-                >
-                  <option value="beklemede">Beklemede</option>
-                  <option value="hazırlanıyor">Hazırlanıyor</option>
-                  <option value="kargoda">Kargoda</option>
-                  <option value="teslim edildi">Teslim Edildi</option>
-                  <option value="iptal edildi">İptal Edildi</option>
-                </select>
-                
-                {updatingOrder === order._id && (
-                  <span className="updating-indicator">Güncelleniyor...</span>
-                )}
-              </div>
-            </div>
-
-            <div className="status-history">
-              <h4>Durum Geçmişi</h4>
-              <div className="history-timeline">
-                {order.statusHistory?.map((history, index) => (
-                  <div key={index} className="history-item">
-                    <div className="history-marker" style={{ backgroundColor: getStatusColor(history.status) }}></div>
-                    <div className="history-content">
-                      <div className="history-header">
-                        <span className="history-status" style={{ color: getStatusColor(history.status) }}>
-                          {getStatusText(history.status)}
-                        </span>
-                        <span className="history-date">
-                          {new Date(history.date).toLocaleDateString('tr-TR')} - {new Date(history.date).toLocaleTimeString('tr-TR')}
-                        </span>
-                      </div>
-                      {history.note && <p className="history-note">{history.note}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Filters & Search */}
+        <div className="orders-toolbar">
+          <div className="status-tabs">
+            <button
+              className={`tab-btn ${statusFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('all')}
+            >
+              Tümü
+            </button>
+            {statusOptions.map(opt => (
+              <button
+                key={opt.value}
+                className={`tab-btn ${statusFilter === opt.value ? 'active' : ''}`}
+                onClick={() => setStatusFilter(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {orders.length === 0 && (
-        <div className="no-orders">
-          Henüz sipariş bulunmuyor.
+          <div className="search-box-orders">
+            <FaSearch className="search-icon" />
+            <input
+              type="text"
+              placeholder="Sipariş No, Müşteri Adı..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
-      )}
-    </div>
+
+        {/* Orders Table */}
+        <div className="orders-table-container">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Sipariş No</th>
+                <th>Müşteri</th>
+                <th>Tarih</th>
+                <th>Tutar</th>
+                <th>Durum</th>
+                <th>Hızlı İşlem</th>
+                <th>Detay</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.map(order => (
+                <tr key={order._id}>
+                  <td>
+                    <span className="order-id">#{order.trackingNumber || order._id.slice(-6).toUpperCase()}</span>
+                  </td>
+                  <td>
+                    <div className="customer-cell">
+                      <span className="customer-name">{order.user?.name || 'Misafir'}</span>
+                      <span className="customer-email">{order.user?.email}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="date-cell">
+                      <FaCalendarAlt className="text-light" />
+                      {new Date(order.createdAt).toLocaleDateString('tr-TR')}
+                    </div>
+                  </td>
+                  <td className="amount-cell">
+                    {order.total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺
+                  </td>
+                  <td>
+                    {getStatusBadge(order.status)}
+                  </td>
+                  <td>
+                    <div className="quick-actions">
+                      <div className="status-select-wrapper">
+                        <select
+                          className="status-select"
+                          value={order.status}
+                          onChange={(e) => handleStatusUpdate(order._id, e.target.value)}
+                          disabled={updatingId === order._id}
+                          style={{
+                            color: getStatusBadge(order.status).props.style.color,
+                            borderColor: getStatusBadge(order.status).props.style.color
+                          }}
+                        >
+                          {statusOptions.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <button
+                      className="btn-view-detail"
+                      onClick={() => navigate(`/orders/${order._id}`)} // Or open a modal
+                    >
+                      <FaEye /> İncele
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {filteredOrders.length === 0 && (
+            <div className="no-data-message">
+              Sipariş bulunamadı.
+            </div>
+          )}
+        </div>
+      </div>
+    </AdminDashboardLayout>
   );
 };
 
-export default AdminOrdersPage; 
+export default AdminOrdersPage;

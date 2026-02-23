@@ -1,8 +1,18 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
+const AddressSchema = new mongoose.Schema({
+  label: { type: String, required: true },         // "Ev", "İş" vb.
+  fullAddress: { type: String, required: true },
+  city: { type: String, required: true },
+  district: { type: String, default: '' },
+  zipCode: { type: String, default: '' },
+  phone: { type: String, required: true },
+  isDefault: { type: Boolean, default: false }
+});
+
 const UserSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+  email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
   password: { type: String, required: true },
   name: { type: String, required: true },         // Ad
   surname: { type: String, required: true },      // Soyad
@@ -13,9 +23,8 @@ const UserSchema = new mongoose.Schema({
   resetToken: String,
   resetTokenExpire: Date,
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }], // Favori ürünler
+  addresses: [AddressSchema], // Kayıtlı adresler
   createdAt: { type: Date, default: Date.now }
 });
 
-// pre('save') hook'unu kaldırıyorum
-
-module.exports = mongoose.model('User', UserSchema); 
+module.exports = mongoose.model('User', UserSchema);
