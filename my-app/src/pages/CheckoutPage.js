@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { createOrder, createGuestOrder, validateCoupon, initPayment, getPaymentResult, getAddresses } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/Toast';
-import { FaCreditCard, FaMoneyBillWave, FaTruck, FaMapMarkerAlt, FaPhone, FaUser, FaTicketAlt, FaCheckCircle, FaTrash, FaShieldAlt, FaEnvelope, FaStar } from 'react-icons/fa';
+import { FaCreditCard, FaMoneyBillWave, FaMapMarkerAlt, FaPhone, FaUser, FaTicketAlt, FaCheckCircle, FaTrash, FaShieldAlt, FaEnvelope, FaStar } from 'react-icons/fa';
 import './CheckoutPage.css';
 
 const CheckoutPage = () => {
@@ -105,7 +105,7 @@ const CheckoutPage = () => {
     setLoading(true);
 
     try {
-      const shipping = getCartTotal() > 1000 ? 0 : 50;
+      // shipping removed as it was unused
       const orderProducts = cart.map(item => ({
         product: item.product._id,
         quantity: item.quantity,

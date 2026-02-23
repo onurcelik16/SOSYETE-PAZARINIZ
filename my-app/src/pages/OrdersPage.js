@@ -4,7 +4,7 @@ import UserDashboardLayout from '../components/UserDashboardLayout';
 import { useAuth } from '../context/AuthContext';
 import { getOrders, cancelOrder, getInvoice } from '../services/api';
 import { useToast } from '../components/Toast';
-import { FaBoxOpen, FaChevronRight, FaCalendarAlt, FaCreditCard, FaMapMarkerAlt, FaSearch, FaFilePdf, FaDownload } from 'react-icons/fa';
+import { FaBoxOpen, FaChevronRight, FaCalendarAlt, FaCreditCard, FaMapMarkerAlt, FaSearch, FaFilePdf } from 'react-icons/fa';
 import './OrdersPage.css';
 
 const OrdersPage = () => {

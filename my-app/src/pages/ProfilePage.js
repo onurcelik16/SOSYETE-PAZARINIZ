@@ -28,6 +28,7 @@ const ProfilePage = () => {
   useEffect(() => {
     fetchUser();
     fetchAddresses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchUser = async () => {
