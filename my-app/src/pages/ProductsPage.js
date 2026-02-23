@@ -107,8 +107,9 @@ const ProductsPage = () => {
 
   // Filtre/sıralama değişince sayfa 1'den yeniden yükle
   useEffect(() => {
-    fetchProducts(1);
-  }, [fetchProducts]);
+    fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory, sortBy, searchTerm, priceRange]);
 
   // Arama debounce (searchTerm onChange yerine)
   const handleSearchChange = (value) => {

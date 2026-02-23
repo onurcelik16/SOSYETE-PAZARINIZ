@@ -5,7 +5,7 @@ import './OrderDetailPage.css';
 import { FaBox, FaTruck, FaCheckCircle, FaTimesCircle, FaMapMarkerAlt, FaPhone, FaArrowLeft, FaCreditCard, FaCalendarAlt } from 'react-icons/fa';
 
 const OrderDetailPage = () => {
-  const { orderId } = useParams();
+  const { orderId } = useParams(); // Keep orderId as it's used consistently
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

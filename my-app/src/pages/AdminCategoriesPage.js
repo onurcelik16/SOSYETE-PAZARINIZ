@@ -21,6 +21,7 @@ const AdminCategoriesPage = () => {
     useEffect(() => {
         if (!user || user.role !== 'admin') { navigate('/'); return; }
         fetchCategories();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, navigate]);
 
     const fetchCategories = async () => {

@@ -23,6 +23,7 @@ const AdminCouponsPage = () => {
     useEffect(() => {
         if (!user || user.role !== 'admin') { navigate('/'); return; }
         fetchCoupons();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, navigate]);
 
     const fetchCoupons = async () => {

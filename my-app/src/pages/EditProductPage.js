@@ -30,7 +30,10 @@ const EditProductPage = () => {
   const [combinations, setCombinations] = useState([]);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') { navigate('/'); return; }
+    if (!user || user.role !== 'admin') {
+      navigate('/');
+      return;
+    }
     fetchProduct();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, navigate]);
