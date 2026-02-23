@@ -118,17 +118,31 @@ app.get('/', (req, res) => {
   res.json({ message: 'Sosyete Pazarı API is running...' });
 });
 
-// Statik dosyalar (Sadece build klasörü varsa servis et - Yerel geliştirme veya Strategy 2 için)
+// Health Check Endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: new Date(),
+    uptime: process.uptime(),
+    db: mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED'
+  });
+});
+
+// Statik dosyalar (Sadece index.html varsa servis et - Yerel geliştirme veya Strategy 2 için)
 const buildPath = path.join(__dirname, '../my-app/build');
-if (fs.existsSync(buildPath)) {
+const indexHtmlPath = path.join(buildPath, 'index.html');
+
+if (fs.existsSync(indexHtmlPath)) {
   app.use(express.static(buildPath));
 
   // Frontend client-side routing handler (API olmayan tüm istekleri index.html'e yönlendir)
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(buildPath, 'index.html'));
+      res.sendFile(indexHtmlPath);
     }
   });
+} else {
+  logger.info('Statik frontend dosyaları bulunamadı, API modunda çalışıyor.');
 }
 
 // Global error handler (en sona eklenmeli)
