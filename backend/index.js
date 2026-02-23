@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -112,23 +113,23 @@ app.use('/api/stock-alerts', stockAlertRoutes);
 const newsletterRoutes = require('./routes/newsletter');
 app.use('/api/newsletter', newsletterRoutes);
 
-// Statik dosyalar (Frontend build)
-app.use(express.static(path.join(__dirname, '../my-app/build')));
+// Root route for API verification
+app.get('/', (req, res) => {
+  res.json({ message: 'Sosyete Pazarı API is running...' });
+});
 
-// Health Check Endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'UP',
-    timestamp: new Date(),
-    uptime: process.uptime(),
-    db: mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED'
+// Statik dosyalar (Sadece build klasörü varsa servis et - Yerel geliştirme veya Strategy 2 için)
+const buildPath = path.join(__dirname, '../my-app/build');
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+
+  // Frontend client-side routing handler (API olmayan tüm istekleri index.html'e yönlendir)
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(buildPath, 'index.html'));
+    }
   });
-});
-
-// Frontend client-side routing handler (API olmayan tüm istekleri index.html'e yönlendir)
-app.use((req, res) => {
-  res.sendFile(path.resolve(__dirname, '../my-app/build', 'index.html'));
-});
+}
 
 // Global error handler (en sona eklenmeli)
 app.use(errorHandler);
