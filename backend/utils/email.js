@@ -2,15 +2,16 @@ const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('KRİTİK HATA: E-posta gönderimi için EMAIL_USER veya EMAIL_PASS eksik!');
+    console.error('KRİTİK HATA: E-posta değişkenleri eksik!');
     return null;
   }
 
-  // Render üzerinde bazen 587 bloklanabiliyor, 465 (SMTPS) deneyelim
+  // Render üzerinde bağlantı havuzu (pool) bazen daha stabil çalışır
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
+    pool: true,
+    host: 'smtp.googlemail.com', // Alternatif Gmail hostu
     port: 465,
-    secure: true, // Port 465 için true
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
@@ -18,10 +19,10 @@ const createTransporter = () => {
     tls: {
       rejectUnauthorized: false
     },
-    family: 4, // IPv4 zorla
-    connectionTimeout: 20000, // Süreyi biraz daha artıralım
-    greetingTimeout: 20000,
-    socketTimeout: 30000,
+    family: 4,
+    connectionTimeout: 30000, // Süreyi daha da artıralım (30sn)
+    greetingTimeout: 30000,
+    socketTimeout: 45000,
     debug: true,
     logger: true
   });
