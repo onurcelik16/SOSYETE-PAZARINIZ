@@ -19,6 +19,7 @@ const createTransporter = () => {
       rejectUnauthorized: false
     },
     // ÖNEMLİ: IPv4 zorla (Render'da IPv6 timeout yapabiliyor)
+    family: 4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
