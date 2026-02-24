@@ -3,11 +3,17 @@ const https = require('https');
 // Brevo API üzerinden e-posta gönderen yardımcı fonksiyon
 const sendViaBrevoAPI = (data) => {
   return new Promise((resolve, reject) => {
-    const apiKey = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+    // Önce BREVO_API_KEY, yoksa diğerlerine bak
+    const apiKey = process.env.BREVO_API_KEY || process.env.SMTP_PASS || process.env.EMAIL_PASS;
 
     if (!apiKey) {
-      return reject(new Error('Brevo API Key (SMTP_PASS) eksik!'));
+      console.error('❌ HATA: Brevo API Key bulunamadı! (BREVO_API_KEY, SMTP_PASS veya EMAIL_PASS eksik)');
+      return reject(new Error('Brevo API Key eksik!'));
     }
+
+    // Güvenlik için key'in ilk ve son karakterlerini loglayalım
+    const maskedKey = apiKey.length > 8 ? (apiKey.substring(0, 4) + '...' + apiKey.substring(apiKey.length - 4)) : '***';
+    console.log(`Sunucu: Brevo API anahtarı kullanılıyor: ${maskedKey}`);
 
     const postData = JSON.stringify({
       sender: {
