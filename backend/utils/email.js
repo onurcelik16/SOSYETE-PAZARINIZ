@@ -1,30 +1,29 @@
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('KRİTİK HATA: E-posta değişkenleri eksik!');
+  // Brevo veya diğer SMTP servisleri için genel yapılandırma
+  const host = process.env.SMTP_HOST || 'smtp-relay.brevo.com';
+  const port = process.env.SMTP_PORT || 587;
+  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
+  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+
+  if (!user || !pass) {
+    console.error('KRİTİK HATA: E-posta (SMTP) değişkenleri eksik!');
     return null;
   }
 
-  // Render üzerinde bağlantı havuzu (pool) bazen daha stabil çalışır
   return nodemailer.createTransport({
-    pool: true,
-    host: 'smtp.googlemail.com', // Alternatif Gmail hostu
-    port: 465,
-    secure: true,
+    host: host,
+    port: port,
+    secure: port == 465, // 465 ise true, 587 ise false (STARTTLS)
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+      user: user,
+      pass: pass
     },
     tls: {
       rejectUnauthorized: false
     },
-    family: 4,
-    connectionTimeout: 30000, // Süreyi daha da artıralım (30sn)
-    greetingTimeout: 30000,
-    socketTimeout: 45000,
-    debug: true,
-    logger: true
+    family: 4 // IPv4 zorlaması devam etsin
   });
 };
 
@@ -80,7 +79,7 @@ const sendOrderConfirmation = async (to, name, order, products) => {
     `);
 
     await transporter.sendMail({
-      from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
+      from: `Sosyete Pazarı <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
       to,
       subject: `Sipariş Onayı - #${order.trackingNumber}`,
       html
@@ -138,7 +137,7 @@ const sendStatusUpdate = async (to, name, order, newStatus, note) => {
     `);
 
     await transporter.sendMail({
-      from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
+      from: `Sosyete Pazarı <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
       to,
       subject: `Sipariş Durumu: ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} - #${order.trackingNumber}`,
       html
@@ -166,7 +165,7 @@ const sendPasswordReset = async (to, name, token) => {
     `);
 
     await transporter.sendMail({
-      from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
+      from: `Sosyete Pazarı <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
       to,
       subject: 'Şifre Sıfırlama - Sosyete Pazarı',
       html
