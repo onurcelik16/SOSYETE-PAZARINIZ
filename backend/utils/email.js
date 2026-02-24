@@ -12,10 +12,12 @@ const createTransporter = () => {
     return null;
   }
 
-  return nodemailer.createTransport({
+  console.log(`Sunucu: SMTP Bağlantısı kuruluyor... Host: ${host}, Port: ${port}, User: ${user}`);
+
+  const transporter = nodemailer.createTransport({
     host: host,
     port: port,
-    secure: port == 465, // 465 ise true, 587 ise false (STARTTLS)
+    secure: port == 465,
     auth: {
       user: user,
       pass: pass
@@ -23,8 +25,12 @@ const createTransporter = () => {
     tls: {
       rejectUnauthorized: false
     },
-    family: 4 // IPv4 zorlaması devam etsin
+    connectionTimeout: 10000, // 10 saniye timeout (kritik)
+    greetingTimeout: 10000,
+    socketTimeout: 15000
   });
+
+  return transporter;
 };
 
 // E-posta header/footer şablonu
@@ -164,16 +170,18 @@ const sendPasswordReset = async (to, name, token) => {
       <p style="color: #999; font-size: 13px;">Bu bağlantı 1 saat geçerlidir. Eğer bu talebi siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.</p>
     `);
 
-    await transporter.sendMail({
+    console.log(`Reset maili gönderiliyor: ${to}...`);
+    const info = await transporter.sendMail({
       from: `Sosyete Pazarı <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
       to,
       subject: 'Şifre Sıfırlama - Sosyete Pazarı',
       html
     });
-    console.log(`Reset email sent to: ${to}`);
+    console.log('✅ Reset maili başarıyla gönderildi:', info.messageId);
     return true;
   } catch (err) {
-    console.error('Şifre sıfırlama e-postası gönderilemedi:', err.message);
+    console.error('❌ Şifre sıfırlama e-postası HATASI:', err.message);
+    if (err.code === 'ETIMEDOUT') console.error('Hata Detayı: Bağlantı zaman aşımına uğradı (Timeout)');
     return false;
   }
 };
