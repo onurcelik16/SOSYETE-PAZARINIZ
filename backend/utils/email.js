@@ -1,18 +1,21 @@
 const nodemailer = require('nodemailer');
 
-// Gmail transporter oluştur (Prodüksiyonda daha stabil ayarlar ile)
 const createTransporter = () => {
+  console.log('Sunucu: Transporter oluşturuluyor...');
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Port 465 için true
+    port: 587,
+    secure: false, // STARTTLS için false
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     },
     tls: {
-      rejectUnauthorized: false // Kurumsal ağlar/sunucular için fallback
-    }
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 10000, // 10 saniye timeout
+    greetingTimeout: 10000,
+    socketTimeout: 15000
   });
 };
 
