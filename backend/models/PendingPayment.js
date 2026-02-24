@@ -11,7 +11,7 @@ const pendingPaymentSchema = new mongoose.Schema({
         address: { type: String }
     },
     products: [{
-        id: String,
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
         name: String,
         category: String,
         price: Number,
