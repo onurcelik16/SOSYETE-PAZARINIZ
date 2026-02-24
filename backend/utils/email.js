@@ -172,8 +172,9 @@ const sendStatusUpdate = async (to, name, order, newStatus, note) => {
 // Şifre sıfırlama e-postası
 const sendPasswordReset = async (to, name, token) => {
   try {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    console.log(`Sunucu: Reset linki için FRONTEND_URL: ${frontendUrl}`);
+    // FRONTEND_URL yoksa CORS_ORIGIN'i dene, o da yoksa localhost
+    const frontendUrl = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
+    console.log(`Sunucu: Şifre sıfırlama linki oluşturuluyor... Hedef: ${frontendUrl}`);
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
     const html = emailWrapper(`
