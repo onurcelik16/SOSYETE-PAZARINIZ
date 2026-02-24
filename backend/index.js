@@ -156,6 +156,16 @@ if (fs.existsSync(indexHtmlPath)) {
 }
 
 // Global error handler (en sona eklenmeli)
+app.get('/api/debug-env', (req, res) => {
+  res.json({
+    FRONTEND_URL: process.env.FRONTEND_URL || 'Eksik',
+    CORS_ORIGIN: process.env.CORS_ORIGIN || 'Eksik',
+    IYZICO_BASE_URL: process.env.IYZICO_BASE_URL || 'Eksik',
+    IYZICO_API_KEY: process.env.IYZICO_API_KEY ? (process.env.IYZICO_API_KEY.substring(0, 8) + '...') : 'Eksik',
+    NODE_ENV: process.env.NODE_ENV
+  });
+});
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
