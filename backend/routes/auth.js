@@ -16,6 +16,7 @@ const {
   mongoIdParam
 } = require('../middleware/validate');
 const adminMiddleware = require('../middleware/admin');
+const { sendPasswordReset } = require('../utils/email');
 
 const router = express.Router();
 
@@ -198,39 +199,12 @@ router.post('/forgot-password', forgotPasswordValidation, async (req, res, next)
     user.resetTokenExpire = Date.now() + 1000 * 60 * 60; // 1 saat geçerli
     await user.save();
 
-    // Gmail SMTP ile mail gönder
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+    // Merkezi util ile mail gönder
+    const emailSent = await sendPasswordReset(user.email, user.name, token);
 
-    const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
-    await transporter.sendMail({
-      from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: 'Şifre Sıfırlama - Sosyete Pazarı',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0;">Sosyete Pazarı</h1>
-          </div>
-          <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-radius: 0 0 10px 10px;">
-            <h2 style="color: #333;">Şifre Sıfırlama Talebi</h2>
-            <p style="color: #666; line-height: 1.6;">Merhaba <strong>${user.name}</strong>,</p>
-            <p style="color: #666; line-height: 1.6;">Hesabınız için şifre sıfırlama talebinde bulundunuz. Aşağıdaki butona tıklayarak yeni şifrenizi belirleyebilirsiniz:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Şifremi Sıfırla</a>
-            </div>
-            <p style="color: #999; font-size: 13px;">Bu bağlantı 1 saat geçerlidir. Eğer bu talebi siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.</p>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-            <p style="color: #bbb; font-size: 12px; text-align: center;">© Sosyete Pazarı</p>
-          </div>
-        </div>
-      `
-    });
+    if (!emailSent) {
+      return res.status(500).json({ success: false, message: 'E-posta gönderilemedi. Lütfen teknik ekiple iletişime geçin.' });
+    }
 
     res.json({ success: true, message: 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.' });
   } catch (err) {

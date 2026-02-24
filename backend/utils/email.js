@@ -1,14 +1,19 @@
 const nodemailer = require('nodemailer');
 
-// Gmail transporter oluştur
+// Gmail transporter oluştur (Prodüksiyonda daha stabil ayarlar ile)
 const createTransporter = () => {
-    return nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    });
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Port 465 için true
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    },
+    tls: {
+      rejectUnauthorized: false // Kurumsal ağlar/sunucular için fallback
+    }
+  });
 };
 
 // E-posta header/footer şablonu
@@ -27,17 +32,17 @@ const emailWrapper = (content) => `
 
 // Sipariş onay e-postası
 const sendOrderConfirmation = async (to, name, order, products) => {
-    try {
-        const transporter = createTransporter();
-        const productRows = products.map(p =>
-            `<tr>
+  try {
+    const transporter = createTransporter();
+    const productRows = products.map(p =>
+      `<tr>
         <td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">${p.title}</td>
         <td style="padding: 8px; border-bottom: 1px solid #f0f0f0; text-align: center;">${p.quantity}</td>
         <td style="padding: 8px; border-bottom: 1px solid #f0f0f0; text-align: right;">${(p.price * p.quantity).toFixed(2)} ₺</td>
       </tr>`
-        ).join('');
+    ).join('');
 
-        const html = emailWrapper(`
+    const html = emailWrapper(`
       <h2 style="color: #333; margin-top: 0;">Siparişiniz Alındı! 🎉</h2>
       <p style="color: #666;">Merhaba <strong>${name}</strong>,</p>
       <p style="color: #666;">Siparişiniz başarıyla oluşturuldu. Detaylar aşağıdadır:</p>
@@ -62,44 +67,44 @@ const sendOrderConfirmation = async (to, name, order, products) => {
       <p style="color: #999; font-size: 13px;">Siparişinizi takip etmek için takip numaranızı kullanabilirsiniz.</p>
     `);
 
-        await transporter.sendMail({
-            from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
-            to,
-            subject: `Sipariş Onayı - #${order.trackingNumber}`,
-            html
-        });
-    } catch (err) {
-        console.error('Sipariş onay e-postası gönderilemedi:', err.message);
-    }
+    await transporter.sendMail({
+      from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
+      to,
+      subject: `Sipariş Onayı - #${order.trackingNumber}`,
+      html
+    });
+  } catch (err) {
+    console.error('Sipariş onay e-postası gönderilemedi:', err.message);
+  }
 };
 
 // Sipariş durumu değişiklik e-postası
 const sendStatusUpdate = async (to, name, order, newStatus, note) => {
-    try {
-        const transporter = createTransporter();
+  try {
+    const transporter = createTransporter();
 
-        const statusColors = {
-            'beklemede': '#f59e0b',
-            'onaylandı': '#3b82f6',
-            'hazırlanıyor': '#8b5cf6',
-            'kargoya verildi': '#06b6d4',
-            'teslim edildi': '#10b981',
-            'iptal edildi': '#ef4444'
-        };
+    const statusColors = {
+      'beklemede': '#f59e0b',
+      'onaylandı': '#3b82f6',
+      'hazırlanıyor': '#8b5cf6',
+      'kargoya verildi': '#06b6d4',
+      'teslim edildi': '#10b981',
+      'iptal edildi': '#ef4444'
+    };
 
-        const statusEmojis = {
-            'beklemede': '⏳',
-            'onaylandı': '✅',
-            'hazırlanıyor': '📦',
-            'kargoya verildi': '🚚',
-            'teslim edildi': '🎉',
-            'iptal edildi': '❌'
-        };
+    const statusEmojis = {
+      'beklemede': '⏳',
+      'onaylandı': '✅',
+      'hazırlanıyor': '📦',
+      'kargoya verildi': '🚚',
+      'teslim edildi': '🎉',
+      'iptal edildi': '❌'
+    };
 
-        const color = statusColors[newStatus] || '#6b7280';
-        const emoji = statusEmojis[newStatus] || '📋';
+    const color = statusColors[newStatus] || '#6b7280';
+    const emoji = statusEmojis[newStatus] || '📋';
 
-        const html = emailWrapper(`
+    const html = emailWrapper(`
       <h2 style="color: #333; margin-top: 0;">Sipariş Durumu Güncellendi ${emoji}</h2>
       <p style="color: #666;">Merhaba <strong>${name}</strong>,</p>
       <p style="color: #666;"><strong>#${order.trackingNumber}</strong> numaralı siparişinizin durumu güncellendi:</p>
@@ -120,15 +125,46 @@ const sendStatusUpdate = async (to, name, order, newStatus, note) => {
       <p style="color: #999; font-size: 13px;">Sipariş takibi için takip numaranızı kullanabilirsiniz.</p>
     `);
 
-        await transporter.sendMail({
-            from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
-            to,
-            subject: `Sipariş Durumu: ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} - #${order.trackingNumber}`,
-            html
-        });
-    } catch (err) {
-        console.error('Durum güncelleme e-postası gönderilemedi:', err.message);
-    }
+    await transporter.sendMail({
+      from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
+      to,
+      subject: `Sipariş Durumu: ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} - #${order.trackingNumber}`,
+      html
+    });
+  } catch (err) {
+    console.error('Durum güncelleme e-postası gönderilemedi:', err.message);
+  }
 };
 
-module.exports = { sendOrderConfirmation, sendStatusUpdate };
+// Şifre sıfırlama e-postası
+const sendPasswordReset = async (to, name, token) => {
+  try {
+    const transporter = createTransporter();
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+
+    const html = emailWrapper(`
+      <h2 style="color: #333; margin-top: 0;">Şifre Sıfırlama Talebi</h2>
+      <p style="color: #666; line-height: 1.6;">Merhaba <strong>${name}</strong>,</p>
+      <p style="color: #666; line-height: 1.6;">Hesabınız için şifre sıfırlama talebinde bulundunuz. Aşağıdaki butona tıklayarak yeni şifrenizi belirleyebilirsiniz:</p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${resetUrl}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Şifremi Sıfırla</a>
+      </div>
+      <p style="color: #999; font-size: 13px;">Bu bağlantı 1 saat geçerlidir. Eğer bu talebi siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.</p>
+    `);
+
+    await transporter.sendMail({
+      from: `Sosyete Pazarı <${process.env.EMAIL_USER}>`,
+      to,
+      subject: 'Şifre Sıfırlama - Sosyete Pazarı',
+      html
+    });
+    console.log(`Reset email sent to: ${to}`);
+    return true;
+  } catch (err) {
+    console.error('Şifre sıfırlama e-postası gönderilemedi:', err.message);
+    return false;
+  }
+};
+
+module.exports = { sendOrderConfirmation, sendStatusUpdate, sendPasswordReset };
