@@ -12,6 +12,9 @@ const logger = require('./utils/logger');
 
 const app = express();
 
+// Render/Vercel gibi proxy kullanan ortamlar için güvenli IP tespiti
+app.set('trust proxy', 1);
+
 // Güvenlik: HTTP header koruması
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },

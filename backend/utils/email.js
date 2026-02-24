@@ -2,7 +2,10 @@ const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.error('E-posta gönderimi için EMAIL_USER veya EMAIL_PASS eksik!');
+    console.error('KRİTİK HATA: E-posta gönderimi için EMAIL_USER veya EMAIL_PASS eksik!');
+    console.log('Kontrol edilen değişkenler:');
+    console.log('- EMAIL_USER:', process.env.EMAIL_USER ? 'TANIMLI' : 'EKSİK');
+    console.log('- EMAIL_PASS:', process.env.EMAIL_PASS ? 'TANIMLI' : 'EKSİK');
     return null;
   }
   return nodemailer.createTransport({
