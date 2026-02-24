@@ -46,7 +46,8 @@ app.use(cors({
     // Check if origin is in allowedOrigins or is a vercel subdomain
     const isAllowed = allowedOrigins.indexOf(origin) !== -1 ||
       origin.endsWith('.vercel.app') ||
-      origin.includes('sosyete-pazariniz');
+      origin.includes('sosyete-pazariniz') ||
+      origin.includes('iyzipay.com');
 
     if (!isAllowed) {
       console.log('Rejected Origin:', origin);
