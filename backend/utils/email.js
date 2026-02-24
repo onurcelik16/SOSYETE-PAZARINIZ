@@ -1,19 +1,17 @@
 const nodemailer = require('nodemailer');
 
 const createTransporter = () => {
-  console.log('Sunucu: Transporter oluşturuluyor...');
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('E-posta gönderimi için EMAIL_USER veya EMAIL_PASS eksik!');
+    return null;
+  }
   return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // STARTTLS için false
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     },
-    tls: {
-      rejectUnauthorized: false
-    },
-    connectionTimeout: 10000, // 10 saniye timeout
+    connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000
   });
