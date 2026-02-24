@@ -3,20 +3,27 @@ const nodemailer = require('nodemailer');
 const createTransporter = () => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.error('KRİTİK HATA: E-posta gönderimi için EMAIL_USER veya EMAIL_PASS eksik!');
-    console.log('Kontrol edilen değişkenler:');
-    console.log('- EMAIL_USER:', process.env.EMAIL_USER ? 'TANIMLI' : 'EKSİK');
-    console.log('- EMAIL_PASS:', process.env.EMAIL_PASS ? 'TANIMLI' : 'EKSİK');
     return null;
   }
+
+  // Render üzerinde IPv6 sorunlarını aşmak için host ve family ayarları
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // STARTTLS
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     },
+    tls: {
+      rejectUnauthorized: false
+    },
+    // ÖNEMLİ: IPv4 zorla (Render'da IPv6 timeout yapabiliyor)
     connectionTimeout: 10000,
     greetingTimeout: 10000,
-    socketTimeout: 15000
+    socketTimeout: 15000,
+    debug: true, // Hataları daha detaylı görelim
+    logger: true
   });
 };
 
