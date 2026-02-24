@@ -173,6 +173,7 @@ const sendStatusUpdate = async (to, name, order, newStatus, note) => {
 const sendPasswordReset = async (to, name, token) => {
   try {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    console.log(`Sunucu: Reset linki için FRONTEND_URL: ${frontendUrl}`);
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
     const html = emailWrapper(`
