@@ -1,36 +1,59 @@
-const nodemailer = require('nodemailer');
+const https = require('https');
 
-const createTransporter = () => {
-  // Brevo veya diğer SMTP servisleri için genel yapılandırma
-  const host = process.env.SMTP_HOST || 'smtp-relay.brevo.com';
-  const port = process.env.SMTP_PORT || 587;
-  const user = process.env.SMTP_USER || process.env.EMAIL_USER;
-  const pass = process.env.SMTP_PASS || process.env.EMAIL_PASS;
+// Brevo API üzerinden e-posta gönderen yardımcı fonksiyon
+const sendViaBrevoAPI = (data) => {
+  return new Promise((resolve, reject) => {
+    const apiKey = process.env.SMTP_PASS || process.env.EMAIL_PASS;
 
-  if (!user || !pass) {
-    console.error('KRİTİK HATA: E-posta (SMTP) değişkenleri eksik!');
-    return null;
-  }
+    if (!apiKey) {
+      return reject(new Error('Brevo API Key (SMTP_PASS) eksik!'));
+    }
 
-  console.log(`Sunucu: SMTP Bağlantısı kuruluyor... Host: ${host}, Port: ${port}, User: ${user}`);
+    const postData = JSON.stringify({
+      sender: {
+        name: "Sosyete Pazarı",
+        email: process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER
+      },
+      to: [{ email: data.to }],
+      subject: data.subject,
+      htmlContent: data.html
+    });
 
-  const transporter = nodemailer.createTransport({
-    host: host,
-    port: port,
-    secure: port == 465,
-    auth: {
-      user: user,
-      pass: pass
-    },
-    tls: {
-      rejectUnauthorized: false
-    },
-    connectionTimeout: 10000, // 10 saniye timeout (kritik)
-    greetingTimeout: 10000,
-    socketTimeout: 15000
+    const options = {
+      hostname: 'api.brevo.com',
+      port: 443,
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(postData)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let responseBody = '';
+      res.on('data', (chunk) => responseBody += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log(`✅ E-posta başarıyla gönderildi (API): ${data.to}`);
+          resolve(true);
+        } else {
+          console.error(`❌ Brevo API Hatası (${res.statusCode}):`, responseBody);
+          reject(new Error(`Brevo API Hatası: ${res.statusCode}`));
+        }
+      });
+    });
+
+    req.on('error', (e) => {
+      console.error(`❌ Bağlantı Hatası: ${e.message}`);
+      reject(e);
+    });
+
+    req.write(postData);
+    req.end();
   });
-
-  return transporter;
 };
 
 // E-posta header/footer şablonu
@@ -50,7 +73,6 @@ const emailWrapper = (content) => `
 // Sipariş onay e-postası
 const sendOrderConfirmation = async (to, name, order, products) => {
   try {
-    const transporter = createTransporter();
     const productRows = products.map(p =>
       `<tr>
         <td style="padding: 8px; border-bottom: 1px solid #f0f0f0;">${p.title}</td>
@@ -84,12 +106,7 @@ const sendOrderConfirmation = async (to, name, order, products) => {
       <p style="color: #999; font-size: 13px;">Siparişinizi takip etmek için takip numaranızı kullanabilirsiniz.</p>
     `);
 
-    await transporter.sendMail({
-      from: `Sosyete Pazarı <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-      to,
-      subject: `Sipariş Onayı - #${order.trackingNumber}`,
-      html
-    });
+    await sendViaBrevoAPI({ to, subject: `Sipariş Onayı - #${order.trackingNumber}`, html });
   } catch (err) {
     console.error('Sipariş onay e-postası gönderilemedi:', err.message);
   }
@@ -98,8 +115,6 @@ const sendOrderConfirmation = async (to, name, order, products) => {
 // Sipariş durumu değişiklik e-postası
 const sendStatusUpdate = async (to, name, order, newStatus, note) => {
   try {
-    const transporter = createTransporter();
-
     const statusColors = {
       'beklemede': '#f59e0b',
       'onaylandı': '#3b82f6',
@@ -142,12 +157,7 @@ const sendStatusUpdate = async (to, name, order, newStatus, note) => {
       <p style="color: #999; font-size: 13px;">Sipariş takibi için takip numaranızı kullanabilirsiniz.</p>
     `);
 
-    await transporter.sendMail({
-      from: `Sosyete Pazarı <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-      to,
-      subject: `Sipariş Durumu: ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} - #${order.trackingNumber}`,
-      html
-    });
+    await sendViaBrevoAPI({ to, subject: `Sipariş Durumu: ${newStatus} - #${order.trackingNumber}`, html });
   } catch (err) {
     console.error('Durum güncelleme e-postası gönderilemedi:', err.message);
   }
@@ -156,7 +166,6 @@ const sendStatusUpdate = async (to, name, order, newStatus, note) => {
 // Şifre sıfırlama e-postası
 const sendPasswordReset = async (to, name, token) => {
   try {
-    const transporter = createTransporter();
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
@@ -170,18 +179,10 @@ const sendPasswordReset = async (to, name, token) => {
       <p style="color: #999; font-size: 13px;">Bu bağlantı 1 saat geçerlidir. Eğer bu talebi siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.</p>
     `);
 
-    console.log(`Reset maili gönderiliyor: ${to}...`);
-    const info = await transporter.sendMail({
-      from: `Sosyete Pazarı <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
-      to,
-      subject: 'Şifre Sıfırlama - Sosyete Pazarı',
-      html
-    });
-    console.log('✅ Reset maili başarıyla gönderildi:', info.messageId);
-    return true;
+    console.log(`Reset maili API üzerinden gönderiliyor: ${to}...`);
+    return await sendViaBrevoAPI({ to, subject: 'Şifre Sıfırlama - Sosyete Pazarı', html });
   } catch (err) {
-    console.error('❌ Şifre sıfırlama e-postası HATASI:', err.message);
-    if (err.code === 'ETIMEDOUT') console.error('Hata Detayı: Bağlantı zaman aşımına uğradı (Timeout)');
+    console.error('❌ Şifre sıfırlama API Hatası:', err.message);
     return false;
   }
 };
