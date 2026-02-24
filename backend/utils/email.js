@@ -6,11 +6,11 @@ const createTransporter = () => {
     return null;
   }
 
-  // Render üzerinde IPv6 sorunlarını aşmak için host ve family ayarları
+  // Render üzerinde bazen 587 bloklanabiliyor, 465 (SMTPS) deneyelim
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // STARTTLS
+    port: 465,
+    secure: true, // Port 465 için true
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
@@ -18,12 +18,11 @@ const createTransporter = () => {
     tls: {
       rejectUnauthorized: false
     },
-    // ÖNEMLİ: IPv4 zorla (Render'da IPv6 timeout yapabiliyor)
-    family: 4,
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-    debug: true, // Hataları daha detaylı görelim
+    family: 4, // IPv4 zorla
+    connectionTimeout: 20000, // Süreyi biraz daha artıralım
+    greetingTimeout: 20000,
+    socketTimeout: 30000,
+    debug: true,
     logger: true
   });
 };
