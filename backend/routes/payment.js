@@ -13,7 +13,8 @@ const logger = require('../utils/logger');
 const iyzipay = new Iyzipay({
     apiKey: process.env.IYZICO_API_KEY,
     secretKey: process.env.IYZICO_SECRET_KEY,
-    uri: process.env.IYZICO_BASE_URL
+    uri: process.env.IYZICO_BASE_URL,
+    baseUrl: process.env.IYZICO_BASE_URL // Bazı versiyonlarda baseUrl kullanılır
 });
 
 // iyzico Tanımlama Logu (Debug için)
@@ -155,6 +156,8 @@ router.post('/init', optionalAuth, async (req, res) => {
             },
             basketItems
         };
+
+        console.log(`Sunucu: iyzico Ödeme Başlatılıyor... Tutar: ${request.paidPrice} TRY, BasketItem Count: ${basketItems.length}`);
 
         iyzipay.checkoutFormInitialize.create(request, async (err, result) => {
             if (err) {
