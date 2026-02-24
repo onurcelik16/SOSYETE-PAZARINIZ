@@ -128,7 +128,7 @@ router.post('/init', optionalAuth, async (req, res) => {
             currency: Iyzipay.CURRENCY.TRY,
             basketId: `basket_${Date.now()}`,
             paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
-            callbackUrl: `${req.protocol}://${req.get('host')}/api/payment/callback`,
+            callbackUrl: `https://${req.get('host')}/api/payment/callback`,
             enabledInstallments: [1, 2, 3, 6],
             buyer: {
                 id: actualUserId || `guest_${Date.now()}`,
@@ -201,16 +201,31 @@ router.post('/init', optionalAuth, async (req, res) => {
 router.post('/callback', express.urlencoded({ extended: true }), async (req, res) => {
     try {
         const { token } = req.body;
-        if (!token) return res.redirect(`${process.env.CORS_ORIGIN}/checkout?payment=fail`);
+        const redirectUrl = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
+
+        console.log(`Sunucu: iyzico Callback Alındı. Token: ${token || 'Eksik'}`);
+
+        if (!token) {
+            console.error('❌ HATA: Callback token eksik!');
+            return res.redirect(`${redirectUrl}/checkout?payment=fail`);
+        }
 
         // Ödeme sonucunu sorgula
         iyzipay.checkoutForm.retrieve({
             locale: Iyzipay.LOCALE.TR,
             token
         }, async (err, result) => {
-            if (err || result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
+            if (err) {
+                console.error('❌ iyzico Retrieve Hatası:', err.message);
+                return res.redirect(`${redirectUrl}/checkout?payment=fail`);
+            }
+
+            console.log(`Sunucu: iyzico Sonucu - Durum: ${result.status}, Ödeme Durumu: ${result.paymentStatus}`);
+
+            if (result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
+                console.log('⚠️ Ödeme Başarısız:', result.errorMessage || 'Bilgi yok');
                 await PendingPayment.deleteOne({ token });
-                return res.redirect(`${process.env.CORS_ORIGIN}/checkout?payment=fail`);
+                return res.redirect(`${redirectUrl}/checkout?payment=fail`);
             }
 
             const paymentData = await PendingPayment.findOne({ token, type: 'payment' });
