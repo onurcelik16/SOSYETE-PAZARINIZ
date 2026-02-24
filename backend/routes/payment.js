@@ -16,6 +16,10 @@ const iyzipay = new Iyzipay({
     uri: process.env.IYZICO_BASE_URL
 });
 
+// iyzico Tanımlama Logu (Debug için)
+const maskedIyziKey = process.env.IYZICO_API_KEY ? (process.env.IYZICO_API_KEY.substring(0, 8) + '...') : 'Eksik';
+console.log(`Sunucu: iyzico başlatıldı. URL: ${process.env.IYZICO_BASE_URL}, Key: ${maskedIyziKey}`);
+
 // Opsiyonel auth middleware — token varsa kullanıcıyı ata, yoksa misafir
 const optionalAuth = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
