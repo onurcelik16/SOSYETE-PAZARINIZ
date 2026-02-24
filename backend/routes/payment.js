@@ -230,15 +230,18 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
 
             const paymentData = await PendingPayment.findOne({ token, type: 'payment' });
             if (!paymentData) {
-                return res.redirect(`${process.env.CORS_ORIGIN}/checkout?payment=fail&reason=expired`);
+                console.error('❌ HATA: Bekleyen ödeme verisi bulunamadı!');
+                return res.redirect(`${redirectUrl}/checkout?payment=fail&reason=expired`);
             }
 
             try {
                 // Stok kontrolü ve düşme
                 for (const item of paymentData.products) {
+                    console.log(`Sunucu: Stok kontrol ediliyor - Ürün ID: ${item.product}`);
                     const product = await Product.findById(item.product);
                     if (!product) {
-                        return res.redirect(`${process.env.CORS_ORIGIN}/checkout?payment=fail&reason=stock`);
+                        console.error(`❌ HATA: Ürün bulunamadı! ID: ${item.product}`);
+                        return res.redirect(`${redirectUrl}/checkout?payment=fail&reason=stock`);
                     }
 
                     if (item.selectedVariant && product.variantCombinations?.length > 0) {
@@ -247,18 +250,21 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
                             return Object.keys(item.selectedVariant).every(k => comboObj[k] === item.selectedVariant[k]);
                         });
                         if (!combo || combo.stock < item.quantity) {
-                            return res.redirect(`${process.env.CORS_ORIGIN}/checkout?payment=fail&reason=stock`);
+                            console.error(`❌ HATA: Varyant stok yetersiz! İstenen: ${item.quantity}`);
+                            return res.redirect(`${redirectUrl}/checkout?payment=fail&reason=stock`);
                         }
                         combo.stock -= item.quantity;
                         await product.save();
                     } else {
+                        console.log(`Sunucu: Ana ürün stok kontrolü - Mevcut: ${product.stock}, İstenen: ${item.quantity}`);
                         const updated = await Product.findOneAndUpdate(
                             { _id: item.product, stock: { $gte: item.quantity } },
                             { $inc: { stock: -item.quantity } },
                             { new: true }
                         );
                         if (!updated) {
-                            return res.redirect(`${process.env.CORS_ORIGIN}/checkout?payment=fail&reason=stock`);
+                            console.error('❌ HATA: Ana ürün stok yetersiz!');
+                            return res.redirect(`${redirectUrl}/checkout?payment=fail&reason=stock`);
                         }
                     }
                 }
@@ -329,15 +335,18 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
                     trackingNumber: order.trackingNumber
                 });
 
-                res.redirect(`${process.env.CORS_ORIGIN}/order-success?orderId=${order._id}&tracking=${order.trackingNumber}`);
+                res.redirect(`${redirectUrl}/order-success?orderId=${order._id}&tracking=${order.trackingNumber}`);
             } catch (orderErr) {
+                console.error('❌ HATA: Sipariş kaydı oluşturulamadı:', orderErr.message);
                 logger.error('Sipariş oluşturma hatası', { error: orderErr.message });
-                res.redirect(`${process.env.CORS_ORIGIN}/checkout?payment=fail&reason=order`);
+                res.redirect(`${redirectUrl}/checkout?payment=fail&reason=order`);
             }
         });
     } catch (err) {
+        console.error('❌ HATA: Callback catch bloğu:', err.message);
         logger.error('Callback hatası', { error: err.message });
-        res.redirect(`${process.env.CORS_ORIGIN}/checkout?payment=fail`);
+        const redirectUrl = process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:3000';
+        res.redirect(`${redirectUrl}/checkout?payment=fail`);
     }
 });
 
