@@ -210,6 +210,20 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
             return res.redirect(`${redirectUrl}/checkout?payment=fail`);
         }
 
+        // Race condition önleyici: Eğer şu an işleniyorsa bekle veya çık
+        if (processingTokens.has(token)) {
+            console.log(`Sunucu: Token şu an işleniyor (${token}), callback beklemeye alındı.`);
+            // Biraz bekleyip tekrar kontrol edebilirsiniz veya doğrudan result kontrolüne geçebilirsiniz
+            await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+
+        // Zaten işlenmiş mi?
+        const existingResult = await PendingPayment.findOne({ token: `result_${token}`, type: 'result' });
+        if (existingResult) {
+            console.log('Sunucu: Bu ödeme zaten işlenmiş, başarı sayfasına yönlendiriliyor.');
+            return res.redirect(`${redirectUrl}/order-success?orderId=${existingResult.orderId}&tracking=${existingResult.trackingNumber}`);
+        }
+
         // Ödeme sonucunu sorgula
         iyzipay.checkoutForm.retrieve({
             locale: Iyzipay.LOCALE.TR,
@@ -230,9 +244,17 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
 
             const paymentData = await PendingPayment.findOne({ token, type: 'payment' });
             if (!paymentData) {
+                // Burada tekrar result kontrolü yapalım (belki aradaki 1 saniyede bitti)
+                const finalCheck = await PendingPayment.findOne({ token: `result_${token}`, type: 'result' });
+                if (finalCheck) {
+                    return res.redirect(`${redirectUrl}/order-success?orderId=${finalCheck.orderId}&tracking=${finalCheck.trackingNumber}`);
+                }
                 console.error('❌ HATA: Bekleyen ödeme verisi bulunamadı!');
                 return res.redirect(`${redirectUrl}/checkout?payment=fail&reason=expired`);
             }
+
+            // Lock ekle
+            processingTokens.add(token);
 
             try {
                 // Stok kontrolü ve düşme
@@ -278,7 +300,7 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
                     status: 'hazırlanıyor'
                 };
 
-                if (paymentData.isGuest) {
+                if (!paymentData.userId && paymentData.guestEmail) {
                     orderData.guestName = paymentData.guestName;
                     orderData.guestEmail = paymentData.guestEmail;
                 } else {
@@ -289,7 +311,7 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
                 await order.save();
 
                 // Sepeti temizle (sadece giriş yapmış kullanıcı)
-                if (!paymentData.isGuest && paymentData.userId) {
+                if (paymentData.userId) {
                     await CartItem.deleteMany({ user: paymentData.userId });
                 }
 
@@ -305,7 +327,7 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
                 // E-posta
                 let emailTo = paymentData.guestEmail;
                 let emailName = paymentData.guestName;
-                if (!paymentData.isGuest && paymentData.userId) {
+                if (paymentData.userId) {
                     const userDoc = await User.findById(paymentData.userId);
                     emailTo = userDoc?.email;
                     emailName = userDoc?.name;
@@ -324,7 +346,7 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
                     }
                 }
 
-                await PendingPayment.deleteOne({ token, type: 'payment' });
+                await PendingPayment.deleteOne({ token });
 
                 // Ödeme sonucu kaydını DB'ye yaz
                 await PendingPayment.create({
@@ -334,6 +356,8 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
                     orderId: order._id,
                     trackingNumber: order.trackingNumber
                 });
+
+                processingTokens.delete(token);
 
                 res.redirect(`${redirectUrl}/order-success?orderId=${order._id}&tracking=${order.trackingNumber}`);
             } catch (orderErr) {
@@ -417,7 +441,8 @@ router.get('/result/:token', optionalAuth, async (req, res) => {
                             status: 'hazırlanıyor'
                         };
 
-                        if (paymentData.isGuest) {
+                        // Guest kontrolü düzeltildi
+                        if (!paymentData.userId && paymentData.guestEmail) {
                             orderData.guestName = paymentData.guestName;
                             orderData.guestEmail = paymentData.guestEmail;
                         } else {
