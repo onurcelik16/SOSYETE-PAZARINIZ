@@ -229,17 +229,18 @@ router.post('/callback', express.urlencoded({ extended: true }), async (req, res
             locale: Iyzipay.LOCALE.TR,
             token
         }, async (err, result) => {
-            if (err) {
-                console.error('❌ iyzico Retrieve Hatası:', err.message);
-                return res.redirect(`${redirectUrl}/checkout?payment=fail`);
+            console.log(`Sunucu: iyzico Sonucu - Durum: ${result.status}, Ödeme Durumu: ${result.paymentStatus}, 3DS: ${result.threeDSHashStatus || 'N/A'}`);
+
+            if (result.status !== 'success') {
+                console.error('❌ iyzico Başarısız Sonuç:', result.errorMessage);
+                processingTokens.delete(token);
+                return res.redirect(`${redirectUrl}/checkout?payment=fail&reason=iyzico_error`);
             }
 
-            console.log(`Sunucu: iyzico Sonucu - Durum: ${result.status}, Ödeme Durumu: ${result.paymentStatus}`);
-
-            if (result.status !== 'success' || result.paymentStatus !== 'SUCCESS') {
-                console.log('⚠️ Ödeme Başarısız:', result.errorMessage || 'Bilgi yok');
-                await PendingPayment.deleteOne({ token });
-                return res.redirect(`${redirectUrl}/checkout?payment=fail`);
+            if (result.paymentStatus !== 'SUCCESS') {
+                console.warn('⚠️ Ödeme Tamamlanmadı:', result.paymentStatus);
+                processingTokens.delete(token);
+                return res.redirect(`${redirectUrl}/checkout?payment=fail&reason=${result.paymentStatus}`);
             }
 
             const paymentData = await PendingPayment.findOne({ token, type: 'payment' });
@@ -393,6 +394,9 @@ router.get('/result/:token', optionalAuth, async (req, res) => {
             return res.json({ status: 'pending' });
         }
 
+        // Polling de lock eklesin ki callback ile çakışmasın
+        processingTokens.add(token);
+
         // Bekleyen ödeme verisi var mı?
         const paymentData = await PendingPayment.findOne({ token, type: 'payment' });
 
@@ -401,13 +405,14 @@ router.get('/result/:token', optionalAuth, async (req, res) => {
             locale: Iyzipay.LOCALE.TR,
             token
         }, async (err, result) => {
-            if (err) return res.status(500).json({ message: 'Sorgulama hatası' });
+            if (err) {
+                processingTokens.delete(token);
+                return res.status(500).json({ message: 'Sorgulama hatası' });
+            }
 
             if (result.paymentStatus === 'SUCCESS') {
                 // Eğer sipariş henüz oluşturulmadıysa oluştur
                 if (paymentData) {
-                    // Lock ekle — aynı token için tekrar işleme girmesin
-                    processingTokens.add(token);
                     await PendingPayment.deleteOne({ token, type: 'payment' });
                     try {
                         // Stok kontrolü ve düşme
