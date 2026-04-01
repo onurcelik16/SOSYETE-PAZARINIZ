@@ -1,7 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaTrash, FaArrowLeft, FaArrowRight, FaMinus, FaPlus, FaShoppingBag } from 'react-icons/fa';
+import {
+  MdDeleteOutline,
+  MdArrowBack,
+  MdRemove,
+  MdAdd,
+  MdLockPerson,
+  MdVerifiedUser,
+  MdLocalShipping,
+  MdOutlineShoppingBag
+} from 'react-icons/md';
 import './CartPage.css';
 
 const CartPage = () => {
@@ -14,57 +23,83 @@ const CartPage = () => {
   } = useCart();
 
   const navigate = useNavigate();
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
 
   if (loading) return <div className="cart-loading"><div className="spinner"></div></div>;
 
   if (!cart || cart.length === 0) {
     return (
       <div className="cart-empty-state">
-        <div className="empty-icon"><FaShoppingBag /></div>
+        <div className="empty-icon"><MdOutlineShoppingBag /></div>
         <h2>Sepetiniz Henüz Boş</h2>
         <p>Hemen alışverişe başlayın ve fırsatları kaçırmayın!</p>
-        <Link to="/products" className="btn btn-primary">Alışverişe Başla</Link>
+        <Link to="/products" className="btn-continue-shopping">Alışverişe Başla</Link>
       </div>
     );
   }
 
   const subtotal = getCartTotal();
-  const shippingCost = subtotal > 1000 ? 0 : 50; // Örnek kargo kuralı
-  const total = subtotal + shippingCost;
+  const shippingCost = subtotal > 1000 ? 0 : 50; // Free shipping logic
+  const total = subtotal + shippingCost - discount;
+
+  const handleApplyCoupon = () => {
+    if (couponCode.toUpperCase() === 'WELC10') {
+      setDiscount(250);
+    } else {
+      setDiscount(0);
+    }
+  };
 
   return (
     <div className="cart-page">
       <div className="cart-header">
-        <h1>Sepetim ({cart.length} Ürün)</h1>
+        <h1>Alışveriş <span>Sepeti</span></h1>
+        <p>Seçtikleriniz sizin için burada bekliyor.</p>
       </div>
 
       <div className="cart-layout">
+        {/* Cart Items */}
         <div className="cart-items">
           {cart.map(item => {
             const product = item.product;
             if (!product) return null;
             return (
-              <div key={item._id || item.id} className="cart-item">
-                <div className="cart-item-image">
+              <div key={item._id || item.id} className="cart-item group">
+                <div className="cart-item-image-wrapper">
                   <img
-                    src={product.image || (product.images && product.images[0]) || 'https://via.placeholder.com/100'}
+                    src={product.image || (product.images && product.images[0]) || 'https://via.placeholder.com/150'}
                     alt={product.title}
+                    className="cart-item-image"
                   />
+                  {product.tag && (
+                    <div className="cart-item-tag">{product.tag}</div>
+                  )}
                 </div>
 
                 <div className="cart-item-details">
-                  <div className="cart-item-info">
-                    <Link to={`/product/${product.slug || product._id}`} className="cart-item-title">{product.title}</Link>
-                    <div className="cart-item-category">{product.category}</div>
-                    <div className="cart-item-price-mobile">
-                      {(product.price * item.quantity).toFixed(2)} ₺
+                  <div className="cart-item-info-top">
+                    <div className="cart-item-title-row">
+                      <Link to={`/product/${product.slug || product._id}`} className="cart-item-title">
+                        {product.title}
+                      </Link>
+                      <button
+                        className="btn-remove"
+                        onClick={() => removeItemFromCart(item._id || item.id)}
+                        aria-label="Sil"
+                      >
+                        <MdDeleteOutline />
+                      </button>
                     </div>
+                    <p className="cart-item-variant">
+                      {product.category} {product.size ? `/ ${product.size}` : ''}
+                    </p>
                   </div>
 
-                  <div className="cart-item-actions">
+                  <div className="cart-item-info-bottom">
                     <div className="quantity-controls">
                       <button
-                        className="qty-btn"
+                        className="btn-qty"
                         onClick={() => {
                           if (item.quantity === 1) {
                             removeItemFromCart(item._id || item.id);
@@ -74,78 +109,105 @@ const CartPage = () => {
                         }}
                         aria-label="Azalt"
                       >
-                        <FaMinus />
+                        <MdRemove />
                       </button>
                       <span className="qty-value">{item.quantity}</span>
                       <button
-                        className="qty-btn"
+                        className="btn-qty"
                         onClick={() => updateItemQuantity(item._id || item.id, item.quantity + 1)}
                         aria-label="Artır"
                       >
-                        <FaPlus />
+                        <MdAdd />
                       </button>
                     </div>
 
-                    <div className="cart-item-price-desktop">
-                      <span className="unit-price">{product.price.toFixed(2)} ₺</span>
-                      <span className="total-price">{(product.price * item.quantity).toFixed(2)} ₺</span>
-                    </div>
-
-                    <button
-                      className="remove-btn"
-                      onClick={() => removeItemFromCart(item._id || item.id)}
-                      aria-label="Sil"
-                    >
-                      <FaTrash />
-                    </button>
+                    <span className="cart-item-price">
+                      {(product.price * item.quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                    </span>
                   </div>
                 </div>
               </div>
             );
           })}
 
-          <Link to="/products" className="continue-shopping">
-            <FaArrowLeft /> Alışverişe Devam Et
-          </Link>
-        </div>
-
-        <div className="cart-summary">
-          <div className="summary-card">
-            <h3>Sipariş Özeti</h3>
-
-            <div className="summary-row">
-              <span>Ara Toplam</span>
-              <span>{subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-            </div>
-
-            <div className="summary-row">
-              <span>Kargo</span>
-              <span>
-                {shippingCost === 0 ? <span className="free-shipping">Ücretsiz</span> : `${shippingCost.toFixed(2)} ₺`}
-              </span>
-            </div>
-
-            <div className="summary-divider"></div>
-
-            <div className="summary-row total">
-              <span>Toplam</span>
-              <span>{total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</span>
-            </div>
-
-            <button
-              onClick={() => navigate('/checkout')}
-              className="btn btn-primary checkout-btn-full"
-            >
-              Sepeti Onayla <FaArrowRight />
-            </button>
-
-            {subtotal < 1000 && (
-              <div className="shipping-notice">
-                {1000 - subtotal} ₺ daha harcayarak <strong>Ücretsiz Kargo</strong> fırsatını yakalayın!
-              </div>
-            )}
+          <div className="cart-footer-actions">
+            <Link to="/products" className="btn-back">
+              <MdArrowBack />
+              Alışverişe Devam Et
+            </Link>
           </div>
         </div>
+
+        {/* Summary Sidebar */}
+        <aside className="cart-summary-aside">
+          <div className="summary-card">
+            <h2>Sipariş Özeti</h2>
+
+            <div className="summary-details">
+              <div className="summary-row">
+                <span>Ara Toplam</span>
+                <span className="summary-val">{subtotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL</span>
+              </div>
+              <div className="summary-row">
+                <span>Kargo</span>
+                <span className="summary-val shipping-free">
+                  {shippingCost === 0 ? 'Ücretsiz' : `${shippingCost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL`}
+                </span>
+              </div>
+              {discount > 0 && (
+                <div className="summary-row discount-row">
+                  <span>İndirim ({couponCode})</span>
+                  <span className="summary-val">-{discount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL</span>
+                </div>
+              )}
+
+              <div className="summary-divider"></div>
+
+              <div className="summary-row-total">
+                <span className="total-label">Toplam</span>
+                <div className="total-right">
+                  <span className="total-price">{total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL</span>
+                  <span className="tax-included">KDV DAHİLDİR</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="checkout-action">
+              <button
+                onClick={() => navigate('/checkout')}
+                className="btn-checkout"
+              >
+                Ödemeye Geç
+              </button>
+            </div>
+
+            <div className="trust-badges">
+              <div className="trust-badge">
+                <MdLockPerson className="badge-icon" />
+                <span>SSL SECURE</span>
+              </div>
+              <div className="trust-badge">
+                <MdVerifiedUser className="badge-icon" />
+                <span>GARANTİLİ</span>
+              </div>
+              <div className="trust-badge">
+                <MdLocalShipping className="badge-icon" />
+                <span>HIZLI TESLİMAT</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="promo-code-section">
+            <input
+              type="text"
+              placeholder="İndirim Kodu"
+              className="promo-input"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+            />
+            <button className="btn-apply-promo" onClick={handleApplyCoupon}>Uygula</button>
+          </div>
+        </aside>
       </div>
     </div>
   );
